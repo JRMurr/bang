@@ -1,0 +1,3 @@
+- https://www.nikbrendler.com/rust-process-communication/
+- https://github.com/DevinR528/rumatui/blob/main/src/main.rs
+- https://github.com/lemunozm/termchat
