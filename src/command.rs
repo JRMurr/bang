@@ -75,7 +75,7 @@ impl<'a> CommandBuilder<'a> {
 // TODO: make builder struct that calls run at the end
 #[derive(Debug)]
 pub struct Command {
-    name: String,
+    pub name: String,
     receiver: Receiver<String>,
     lines: Vec<String>,
     child: Child,
@@ -109,12 +109,12 @@ impl Command {
 
 #[derive(Debug, Default)]
 pub struct CommandManager {
-    pub commands: HashMap<String, Command>,
+    pub commands: Vec<Command>,
 }
 
 impl CommandManager {
     pub fn add_command(&mut self, command: Command) -> crate::Result<()> {
-        self.commands.insert(command.name.clone(), command);
+        self.commands.push(command);
 
         Ok(())
     }
@@ -122,6 +122,6 @@ impl CommandManager {
     pub fn poll_commands(&mut self) {
         self.commands
             .iter_mut()
-            .for_each(|(_, command)| command.populate_lines());
+            .for_each(|command| command.populate_lines());
     }
 }

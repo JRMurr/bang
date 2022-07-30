@@ -17,10 +17,12 @@ pub fn draw(
         .constraints([Constraint::Min(0), Constraint::Percentage(50)].as_ref())
         .split(frame.size());
 
-    for ((name, command), chunk) in commands.commands.iter().zip(chunks.iter())
-    {
-        let output = Paragraph::new(command.spans())
-            .block(Block::default().title(name.clone()).borders(Borders::ALL));
+    for (command, chunk) in commands.commands.iter().zip(chunks.iter()) {
+        let output = Paragraph::new(command.spans()).block(
+            Block::default()
+                .title(command.name.clone())
+                .borders(Borders::ALL),
+        );
         frame.render_widget(output, *chunk);
     }
 }
