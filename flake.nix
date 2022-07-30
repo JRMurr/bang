@@ -40,7 +40,9 @@
         defaultPackage = bang;
         devShell = mkShell {
           buildInputs = [
-            (rustVersion.override { extensions = [ "rust-src" ]; })
+            (rustVersion.override {
+              extensions = [ "rust-src" "rust-analyzer" ];
+            })
 
             cargo-expand
 

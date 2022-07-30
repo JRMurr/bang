@@ -1,5 +1,6 @@
 pub mod application;
 mod command;
+mod config;
 mod renderer;
 mod ui;
 

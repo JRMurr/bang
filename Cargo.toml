@@ -6,7 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.58"
 crossbeam = "0.8"
 crossterm = "0.24"
+serde = { version = "1.0.140", features = ["derive"] }
 shell-words = "1.1.0"
+thiserror = "1.0.31"
 tui = "0.18"

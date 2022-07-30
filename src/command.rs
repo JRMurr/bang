@@ -1,6 +1,6 @@
 use crossbeam::channel::{unbounded, Receiver};
+use serde::{Deserialize, Serialize};
 use std::{
-    collections::HashMap,
     io::{BufRead, BufReader},
     path::Path,
     process::{Child, Command as CommandRunner, Stdio},
@@ -8,9 +8,11 @@ use std::{
 };
 use tui::text::{Span, Spans};
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CommandBuilder<'a> {
     command: String,
     name: Option<String>,
+    #[serde(borrow)]
     running_dir: Option<&'a Path>,
 }
 
@@ -72,7 +74,6 @@ impl<'a> CommandBuilder<'a> {
     }
 }
 
-// TODO: make builder struct that calls run at the end
 #[derive(Debug)]
 pub struct Command {
     pub name: String,
