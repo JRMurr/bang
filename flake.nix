@@ -14,9 +14,20 @@
         pkgs = import nixpkgs { inherit system overlays; };
         rustVersion =
           (pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml);
-        #   pkgs.rust-bin.stable.latest.default;
-      in with pkgs; {
 
+        rustPlatform = pkgs.makeRustPlatform {
+          cargo = rustVersion;
+          rustc = rustVersion;
+        };
+        bang = rustPlatform.buildRustPackage {
+          pname = "bang";
+          version = "0.1.0";
+          src = ./.; # the folder with the cargo.toml
+          cargoLock.lockFile = ./Cargo.lock;
+        };
+
+      in with pkgs; {
+        defaultPackage = bang;
         devShell = mkShell {
           buildInputs = [
             (rustVersion.override { extensions = [ "rust-src" ]; })
