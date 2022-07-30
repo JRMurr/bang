@@ -8,6 +8,9 @@
   - main box of program input
 - figure out config format
 - would be nice to add way to kill/restart certain commands without killing all of them
+- make separate thread for reading input (maybe one for rendering?)
+- Handle errors properly
+- Make message types to pass around threads
 
 
 ## resources
