@@ -2,45 +2,59 @@ use crossbeam::channel::{unbounded, Receiver};
 use std::{
     collections::HashMap,
     io::{BufRead, BufReader},
-    process::{Command as CommandRunner, Stdio},
+    path::Path,
+    process::{Child, Command as CommandRunner, Stdio},
     thread,
 };
 use tui::text::{Span, Spans};
 
-// TODO: make builder struct that calls run at the end
-#[derive(Debug, Default)]
-pub struct Command {
+pub struct CommandBuilder<'a> {
     command: String,
-    receiver: Option<Receiver<String>>,
-    lines: Vec<String>,
+    name: Option<String>,
+    running_dir: Option<&'a Path>,
 }
 
-impl Command {
+impl<'a> CommandBuilder<'a> {
     pub fn new(command: String) -> Self {
         Self {
             command,
-            receiver: None,
-            lines: Vec::new(),
+            name: None,
+            running_dir: None,
         }
     }
 
-    pub fn run(&mut self) -> crate::Result<()> {
+    pub fn name(mut self, name: String) -> Self {
+        self.name = Some(name);
+        self
+    }
+
+    pub fn running_dir(mut self, path: &'a Path) -> Self {
+        self.running_dir = Some(path);
+        self
+    }
+
+    pub fn run(self) -> crate::Result<Command> {
         let command = shell_words::split(&self.command)?;
 
         // TODO: add errors for parsing
         let program = command.first().expect("Command should not be empty");
         let args = &command[1..];
-        let child = CommandRunner::new(program)
-            .args(args)
-            .stdout(Stdio::piped())
+
+        let mut binding = CommandRunner::new(program);
+        let mut command_runner = binding.args(args).stdout(Stdio::piped());
+
+        if let Some(dir) = self.running_dir {
+            command_runner = command_runner.current_dir(dir);
+        }
+
+        let mut child = command_runner
             .spawn()
             .unwrap_or_else(|_| panic!("failed to run {}", self.command));
+
         let (sender, receiver) = unbounded::<String>();
-
-        self.receiver = Some(receiver);
-
+        let stdout = child.stdout.take().unwrap();
         thread::spawn(move || {
-            let mut f = BufReader::new(child.stdout.unwrap());
+            let mut f = BufReader::new(stdout);
             loop {
                 let mut buf = String::new();
                 match f.read_line(&mut buf) {
@@ -51,16 +65,36 @@ impl Command {
                 }
             }
         });
-        Ok(())
+
+        let name = self.name.unwrap_or(self.command);
+
+        Ok(Command::new(name, receiver, child))
+    }
+}
+
+// TODO: make builder struct that calls run at the end
+#[derive(Debug)]
+pub struct Command {
+    name: String,
+    receiver: Receiver<String>,
+    lines: Vec<String>,
+    child: Child,
+}
+
+impl Command {
+    pub fn new(name: String, receiver: Receiver<String>, child: Child) -> Self {
+        Self {
+            name,
+            receiver,
+            child,
+            lines: Vec::new(),
+        }
     }
 
     pub fn populate_lines(&mut self) {
-        let receiver =
-            self.receiver.as_ref().expect("command has not been run");
-
         // TODO: handle error of disconnected https://docs.rs/crossbeam/0.8.2/crossbeam/channel/enum.TryRecvError.html
 
-        if let Ok(line) = receiver.try_recv() {
+        if let Ok(line) = self.receiver.try_recv() {
             self.lines.push(line);
         }
     }
@@ -79,11 +113,8 @@ pub struct CommandManager {
 }
 
 impl CommandManager {
-    pub fn add_command(&mut self, command: String) -> crate::Result<()> {
-        let mut running_command = Command::new(command.clone());
-        running_command.run()?;
-
-        self.commands.insert(command, running_command);
+    pub fn add_command(&mut self, command: Command) -> crate::Result<()> {
+        self.commands.insert(command.name.clone(), command);
 
         Ok(())
     }
