@@ -3,12 +3,9 @@ use crossterm::{
     ExecutableCommand,
 };
 use std::io::Write;
-use tui::{
-    backend::{Backend, CrosstermBackend},
-    text::Spans,
-    widgets::Paragraph,
-    Frame, Terminal,
-};
+use tui::{backend::CrosstermBackend, Terminal};
+
+use crate::command::CommandManager;
 
 pub struct Renderer<W: Write> {
     terminal: Terminal<CrosstermBackend<W>>,
@@ -24,8 +21,9 @@ impl<W: Write> Renderer<W> {
         })
     }
 
-    pub fn render(&mut self, lines: Vec<Spans>) -> crate::Result<()> {
-        self.terminal.draw(|frame| ui(frame, lines))?;
+    pub fn render(&mut self, commands: &CommandManager) -> crate::Result<()> {
+        self.terminal
+            .draw(|frame| crate::ui::draw(frame, commands))?;
         Ok(())
     }
 }
@@ -44,10 +42,4 @@ impl<W: Write> Drop for Renderer<W> {
             );
         }
     }
-}
-
-fn ui<B: Backend>(frame: &mut Frame<B>, lines: Vec<Spans>) {
-    let output = Paragraph::new(lines);
-
-    frame.render_widget(output, frame.size());
 }

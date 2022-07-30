@@ -1,11 +1,14 @@
 use crossbeam::channel::{unbounded, Receiver};
 use std::{
+    collections::HashMap,
     io::{BufRead, BufReader},
     process::{Command as CommandRunner, Stdio},
     thread,
 };
 use tui::text::{Span, Spans};
 
+// TODO: make builder struct that calls run at the end
+#[derive(Debug, Default)]
 pub struct Command {
     command: String,
     receiver: Option<Receiver<String>>,
@@ -67,5 +70,27 @@ impl Command {
             .iter()
             .map(|line| Spans::from(vec![Span::raw(line)]))
             .collect()
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct CommandManager {
+    pub commands: HashMap<String, Command>,
+}
+
+impl CommandManager {
+    pub fn add_command(&mut self, command: String) -> crate::Result<()> {
+        let mut running_command = Command::new(command.clone());
+        running_command.run()?;
+
+        self.commands.insert(command, running_command);
+
+        Ok(())
+    }
+
+    pub fn poll_commands(&mut self) {
+        self.commands
+            .iter_mut()
+            .for_each(|(_, command)| command.populate_lines());
     }
 }
