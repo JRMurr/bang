@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 crossbeam = "0.8"
 crossterm = "0.24"
+shell-words = "1.1.0"
 tui = "0.18"

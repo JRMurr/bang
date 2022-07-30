@@ -5,7 +5,7 @@ use crossterm::{
 use std::io::Write;
 use tui::{
     backend::{Backend, CrosstermBackend},
-    text::{Span, Spans},
+    text::Spans,
     widgets::Paragraph,
     Frame, Terminal,
 };
@@ -24,8 +24,8 @@ impl<W: Write> Renderer<W> {
         })
     }
 
-    pub fn render(&mut self, line: &[String]) -> crate::Result<()> {
-        self.terminal.draw(|frame| ui(frame, line))?;
+    pub fn render(&mut self, lines: Vec<Spans>) -> crate::Result<()> {
+        self.terminal.draw(|frame| ui(frame, lines))?;
         Ok(())
     }
 }
@@ -40,18 +40,13 @@ impl<W: Write> Drop for Renderer<W> {
             .expect("Terminal doesn't support to disable raw mode");
         if std::thread::panicking() {
             eprintln!(
-                "bang paniced, to log the error you can redirect stderror to a file, example: bang 2> bang_log",
+                "bang panicked, to log the error you can redirect stderr to a file, example: bang 2> bang_log",
             );
         }
     }
 }
 
-fn ui<B: Backend>(frame: &mut Frame<B>, lines: &[String]) {
-    let lines = lines
-        .iter()
-        .map(|line| Spans::from(vec![Span::raw(line)]))
-        .collect::<Vec<_>>();
-
+fn ui<B: Backend>(frame: &mut Frame<B>, lines: Vec<Spans>) {
     let output = Paragraph::new(lines);
 
     frame.render_widget(output, frame.size());
