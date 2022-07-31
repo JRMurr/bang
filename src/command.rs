@@ -2,7 +2,7 @@ use crossbeam::channel::{unbounded, Receiver};
 use serde::{Deserialize, Serialize};
 use std::{
     io::{BufRead, BufReader},
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::{Child, Command as CommandRunner, Stdio},
     slice::Iter,
     thread,
@@ -14,6 +14,26 @@ pub struct CommandBuilder {
     command: String,
     name: Option<String>,
     running_dir: Option<PathBuf>,
+}
+
+fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Option<PathBuf> {
+    let p = path_user_input.as_ref();
+    if !p.starts_with("~") {
+        return Some(p.to_path_buf());
+    }
+    if p == Path::new("~") {
+        return dirs::home_dir();
+    }
+    dirs::home_dir().map(|mut h| {
+        if h == Path::new("/") {
+            // Corner case: `h` root directory;
+            // don't prepend extra `/`, just drop the tilde.
+            p.strip_prefix("~").unwrap().to_path_buf()
+        } else {
+            h.push(p.strip_prefix("~/").unwrap());
+            h
+        }
+    })
 }
 
 impl CommandBuilder {
@@ -28,7 +48,9 @@ impl CommandBuilder {
         let mut command_runner = binding.args(args).stdout(Stdio::piped());
 
         if let Some(dir) = self.running_dir {
-            command_runner = command_runner.current_dir(dir);
+            let dir = expand_tilde(dir).unwrap();
+            let dir = std::fs::canonicalize(dir)?;
+            command_runner = command_runner.current_dir(dbg!(dir));
         }
 
         let mut child = command_runner
@@ -93,6 +115,12 @@ impl Command {
             .collect();
 
         (&mut self.state, lines)
+    }
+}
+
+impl Drop for Command {
+    fn drop(&mut self) {
+        self._child.kill().expect("sad")
     }
 }
 

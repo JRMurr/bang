@@ -8,7 +8,6 @@ pub struct Application {}
 
 impl Application {
     pub fn run(&mut self, out: impl std::io::Write) -> crate::Result<()> {
-        let mut renderer = Renderer::new(out)?;
         let mut commands = CommandManager::default();
 
         let config = Config::read(None)?;
@@ -17,6 +16,8 @@ impl Application {
             let command = command.run()?;
             commands.add_command(command)?;
         }
+        let mut renderer = Renderer::new(out)?;
+
         commands.select(0);
 
         commands.poll_commands();
