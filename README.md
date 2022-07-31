@@ -11,6 +11,7 @@
 - make separate thread for reading input (maybe one for rendering?)
 - Handle errors properly
 - Make message types to pass around threads
+- Log scrolling
 
 
 ## resources

@@ -14,8 +14,10 @@ impl Application {
         let mut renderer = Renderer::new(out)?;
         let mut commands = CommandManager::default();
 
-        let command_strings =
-            vec!["ping localhost".to_string(), "ping 1.1.1.1".to_string()];
+        let command_strings = vec![
+            "ping -i 0.1 localhost".to_string(),
+            "ping 1.1.1.1".to_string(),
+        ];
         for command in command_strings {
             let command = CommandBuilder::new(command).run()?;
             commands.add_command(command)?;
