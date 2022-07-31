@@ -14,6 +14,7 @@
 - Make message types to pass around threads
 - Log scrolling
   - basic scrolling works but support user scrolling
+- handle errors of commands gracefully
 
 
 ## resources
