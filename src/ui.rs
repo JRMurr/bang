@@ -1,13 +1,13 @@
 use std::io::Write;
 use tui::{
     backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout},
+    layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, List, ListItem, Paragraph},
+    widgets::{Block, Borders, List, ListItem},
     Frame,
 };
 
-use crate::command::CommandManager;
+use crate::command::{Command, CommandManager};
 
 pub fn draw(
     frame: &mut Frame<CrosstermBackend<impl Write>>,
@@ -36,19 +36,16 @@ pub fn draw(
 
     frame.render_stateful_widget(list_output, list_chunk, commands.state());
 
-    let output = Paragraph::new(commands.get_selected().spans()).block(
-        Block::default()
-            // .title(commands.commands[0].name.clone())
-            .borders(Borders::ALL),
-    );
-    frame.render_widget(output, main);
+    draw_command_output(frame, commands.get_selected(), main);
+}
 
-    // for (command, chunk) in commands.commands.iter().zip(chunks.iter()) {
-    //     let output = Paragraph::new(command.spans()).block(
-    //         Block::default()
-    //             .title(command.name.clone())
-    //             .borders(Borders::ALL),
-    //     );
-    //     frame.render_widget(output, *chunk);
-    // }
+fn draw_command_output(
+    frame: &mut Frame<CrosstermBackend<impl Write>>,
+    command: &mut Command,
+    chunk: Rect,
+) {
+    let (state, list) = command.draw_info();
+
+    let output = List::new(list).block(Block::default().borders(Borders::ALL));
+    frame.render_stateful_widget(output, chunk, state);
 }

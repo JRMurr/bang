@@ -7,10 +7,7 @@ use std::{
     slice::Iter,
     thread,
 };
-use tui::{
-    text::{Span, Spans},
-    widgets::ListState,
-};
+use tui::widgets::{ListItem, ListState};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CommandBuilder {
@@ -64,6 +61,7 @@ pub struct Command {
     pub name: String,
     receiver: Receiver<String>,
     lines: Vec<String>,
+    pub state: ListState,
     _child: Child,
 }
 
@@ -74,6 +72,7 @@ impl Command {
             receiver,
             _child: child,
             lines: Vec::new(),
+            state: ListState::default(),
         }
     }
 
@@ -82,14 +81,18 @@ impl Command {
 
         if let Ok(line) = self.receiver.try_recv() {
             self.lines.push(line);
+            self.state.select(Some(self.lines.len() - 1));
         }
     }
 
-    pub fn spans(&self) -> Vec<Spans> {
-        self.lines
+    pub fn draw_info(&mut self) -> (&mut ListState, Vec<ListItem>) {
+        let lines = self
+            .lines
             .iter()
-            .map(|line| Spans::from(vec![Span::raw(line)]))
-            .collect()
+            .map(|line| ListItem::new(line.clone()))
+            .collect();
+
+        (&mut self.state, lines)
     }
 }
 
@@ -124,7 +127,7 @@ impl CommandManager {
         &mut self.state
     }
 
-    pub fn get_selected(&self) -> &Command {
+    pub fn get_selected(&mut self) -> &mut Command {
         // TODO: throw errors here
         let selected = self
             .state
@@ -132,7 +135,7 @@ impl CommandManager {
             .expect("a command must be selected at all times");
 
         self.commands
-            .get(selected)
+            .get_mut(selected)
             .expect("selected command must be in list")
     }
 

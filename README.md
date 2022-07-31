@@ -12,6 +12,7 @@
 - Handle errors properly
 - Make message types to pass around threads
 - Log scrolling
+  - basic scrolling works but support user scrolling
 
 
 ## resources
