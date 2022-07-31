@@ -11,7 +11,7 @@ impl Application {
         let mut renderer = Renderer::new(out)?;
         let mut commands = CommandManager::default();
 
-        let config = Config::read()?;
+        let config = Config::read(None)?;
 
         for command in config.commands {
             let command = command.run()?;

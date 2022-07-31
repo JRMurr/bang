@@ -2,6 +2,7 @@
 
 ## TODO
 - add hooks to clean up child processes on exit
+  - I think this is being cleaned up already
 - figure out layout.
   - Lazy docker layout would be neat
   - left side is list of all running commands

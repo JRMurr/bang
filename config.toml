@@ -1,5 +1,0 @@
-commands = [
-    {command = "ping -i 0.1 localhost"},
-    {command = "ping 1.1.1.1"},
-    {command = "cat config.toml", name = "fart"}
-]

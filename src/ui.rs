@@ -29,7 +29,7 @@ pub fn draw(
             .map(|c| ListItem::new(c.name.clone()))
             .collect::<Vec<_>>(),
     )
-    .block(Block::default().title("List").borders(Borders::ALL))
+    .block(Block::default().borders(Borders::ALL))
     .style(Style::default().fg(Color::White))
     .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
     .highlight_symbol(">>");
