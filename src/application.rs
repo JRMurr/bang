@@ -20,20 +20,25 @@ impl Application {
             let command = CommandBuilder::new(command).run()?;
             commands.add_command(command)?;
         }
+        commands.select(0);
 
         commands.poll_commands();
 
-        renderer.render(&commands)?;
+        renderer.render(&mut commands)?;
+
         loop {
             if event::poll(Duration::from_millis(16))? && let Event::Key(key) = event::read()? {
-                if let KeyCode::Char('q') = key.code {
-                    return Ok(());
+                match key.code {
+                    KeyCode::Char('q') => return Ok(()), // exit on q
+                    KeyCode::Up => commands.previous(),
+                    KeyCode::Down => commands.next(),
+                    _ => {}
                 }
             }
 
             commands.poll_commands();
 
-            renderer.render(&commands)?;
+            renderer.render(&mut commands)?;
         }
     }
 }

@@ -21,7 +21,10 @@ impl<W: Write> Renderer<W> {
         })
     }
 
-    pub fn render(&mut self, commands: &CommandManager) -> crate::Result<()> {
+    pub fn render(
+        &mut self,
+        commands: &mut CommandManager,
+    ) -> crate::Result<()> {
         self.terminal
             .draw(|frame| crate::ui::draw(frame, commands))?;
         Ok(())

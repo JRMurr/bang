@@ -4,9 +4,13 @@ use std::{
     io::{BufRead, BufReader},
     path::Path,
     process::{Child, Command as CommandRunner, Stdio},
+    slice::Iter,
     thread,
 };
-use tui::text::{Span, Spans};
+use tui::{
+    text::{Span, Spans},
+    widgets::ListState,
+};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CommandBuilder<'a> {
@@ -110,7 +114,8 @@ impl Command {
 
 #[derive(Debug, Default)]
 pub struct CommandManager {
-    pub commands: Vec<Command>,
+    commands: Vec<Command>,
+    state: ListState,
 }
 
 impl CommandManager {
@@ -120,9 +125,68 @@ impl CommandManager {
         Ok(())
     }
 
+    pub fn get(&self, idx: usize) -> Option<&Command> {
+        self.commands.get(idx)
+    }
+
     pub fn poll_commands(&mut self) {
         self.commands
             .iter_mut()
             .for_each(|command| command.populate_lines());
+    }
+
+    pub fn iter(&self) -> Iter<Command> {
+        self.commands.iter()
+    }
+
+    pub fn select(&mut self, idx: usize) {
+        self.state.select(Some(idx));
+    }
+
+    pub fn state(&mut self) -> &mut ListState {
+        &mut self.state
+    }
+
+    pub fn get_selected(&self) -> &Command {
+        // TODO: throw errors here
+        let selected = self
+            .state
+            .selected()
+            .expect("a command must be selected at all times");
+
+        self.commands
+            .get(selected)
+            .expect("selected command must be in list")
+    }
+
+    pub fn next(&mut self) {
+        let i = match self.state.selected() {
+            Some(i) => {
+                if i >= self.commands.len() - 1 {
+                    0
+                } else {
+                    i + 1
+                }
+            }
+            None => 0,
+        };
+        self.state.select(Some(i));
+    }
+
+    // Select the previous item. This will not be reflected until the widget is
+    // drawn in the `Terminal::draw` callback using
+    // `Frame::render_stateful_widget`.
+    pub fn previous(&mut self) {
+        let i = match self.state.selected() {
+            Some(i) => {
+                if i == 0 {
+                    self.commands.len() - 1
+                } else {
+                    i - 1
+                }
+            }
+            None => 0,
+        };
+        self.state.select(Some(i));
     }
 }
