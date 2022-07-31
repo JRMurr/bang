@@ -2,10 +2,7 @@ use std::time::Duration;
 
 use crossterm::event::{self, Event, KeyCode};
 
-use crate::{
-    command::{CommandBuilder, CommandManager},
-    renderer::Renderer,
-};
+use crate::{command::CommandManager, config::Config, renderer::Renderer};
 
 pub struct Application {}
 
@@ -14,12 +11,10 @@ impl Application {
         let mut renderer = Renderer::new(out)?;
         let mut commands = CommandManager::default();
 
-        let command_strings = vec![
-            "ping -i 0.1 localhost".to_string(),
-            "ping 1.1.1.1".to_string(),
-        ];
-        for command in command_strings {
-            let command = CommandBuilder::new(command).run()?;
+        let config = Config::read()?;
+
+        for command in config.commands {
+            let command = command.run()?;
             commands.add_command(command)?;
         }
         commands.select(0);

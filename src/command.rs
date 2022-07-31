@@ -2,7 +2,7 @@ use crossbeam::channel::{unbounded, Receiver};
 use serde::{Deserialize, Serialize};
 use std::{
     io::{BufRead, BufReader},
-    path::Path,
+    path::PathBuf,
     process::{Child, Command as CommandRunner, Stdio},
     slice::Iter,
     thread,
@@ -13,32 +13,13 @@ use tui::{
 };
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct CommandBuilder<'a> {
+pub struct CommandBuilder {
     command: String,
     name: Option<String>,
-    #[serde(borrow)]
-    running_dir: Option<&'a Path>,
+    running_dir: Option<PathBuf>,
 }
 
-impl<'a> CommandBuilder<'a> {
-    pub fn new(command: String) -> Self {
-        Self {
-            command,
-            name: None,
-            running_dir: None,
-        }
-    }
-
-    pub fn name(mut self, name: String) -> Self {
-        self.name = Some(name);
-        self
-    }
-
-    pub fn running_dir(mut self, path: &'a Path) -> Self {
-        self.running_dir = Some(path);
-        self
-    }
-
+impl CommandBuilder {
     pub fn run(self) -> crate::Result<Command> {
         let command = shell_words::split(&self.command)?;
 
@@ -83,7 +64,7 @@ pub struct Command {
     pub name: String,
     receiver: Receiver<String>,
     lines: Vec<String>,
-    child: Child,
+    _child: Child,
 }
 
 impl Command {
@@ -91,7 +72,7 @@ impl Command {
         Self {
             name,
             receiver,
-            child,
+            _child: child,
             lines: Vec::new(),
         }
     }
@@ -123,10 +104,6 @@ impl CommandManager {
         self.commands.push(command);
 
         Ok(())
-    }
-
-    pub fn get(&self, idx: usize) -> Option<&Command> {
-        self.commands.get(idx)
     }
 
     pub fn poll_commands(&mut self) {

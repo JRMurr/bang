@@ -3,7 +3,14 @@ use serde::{Deserialize, Serialize};
 use crate::command::CommandBuilder;
 
 #[derive(Serialize, Deserialize, Debug)]
-struct Config<'a> {
-    #[serde(borrow)]
-    commands: Vec<CommandBuilder<'a>>,
+pub struct Config {
+    pub commands: Vec<CommandBuilder>,
+}
+
+impl Config {
+    pub fn read() -> anyhow::Result<Self> {
+        let data = std::fs::read_to_string("./config.toml")
+            .expect("Unable to read file");
+        Ok(toml::from_str(data.as_str())?)
+    }
 }
