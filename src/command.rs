@@ -45,12 +45,15 @@ impl CommandBuilder {
         let args = &command[1..];
 
         let mut binding = CommandRunner::new(program);
-        let mut command_runner = binding.args(args).stdout(Stdio::piped());
+        let mut command_runner = binding
+            .args(args)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
 
         if let Some(dir) = self.running_dir {
             let dir = expand_tilde(dir).unwrap();
             let dir = std::fs::canonicalize(dir)?;
-            command_runner = command_runner.current_dir(dbg!(dir));
+            command_runner = command_runner.current_dir(dir);
         }
 
         let mut child = command_runner
@@ -65,7 +68,11 @@ impl CommandBuilder {
                 let mut buf = String::new();
                 match f.read_line(&mut buf) {
                     Ok(_) => {
-                        sender.send(buf).unwrap();
+                        if let Err(e) = sender.send(buf) {
+                            // disconnected. Right now only happens on exit so
+                            // probably fine to ignore
+                            dbg!(e);
+                        }
                     }
                     Err(e) => println!("an error!: {:?}", e),
                 }
@@ -84,7 +91,7 @@ pub struct Command {
     receiver: Receiver<String>,
     lines: Vec<String>,
     pub state: ListState,
-    _child: Child,
+    child: Child,
 }
 
 impl Command {
@@ -92,7 +99,7 @@ impl Command {
         Self {
             name,
             receiver,
-            _child: child,
+            child,
             lines: Vec::new(),
             state: ListState::default(),
         }
@@ -120,7 +127,8 @@ impl Command {
 
 impl Drop for Command {
     fn drop(&mut self) {
-        self._child.kill().expect("sad")
+        self.child.kill().expect("sad");
+        self.child.wait().expect("sad 2.");
     }
 }
 

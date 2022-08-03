@@ -15,6 +15,7 @@
 - Log scrolling
   - basic scrolling works but support user scrolling
 - handle errors of commands gracefully
+  - might be nice to use https://docs.rs/subprocess/latest/subprocess/index.html since it has redirection
 
 
 ## resources
