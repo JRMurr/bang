@@ -1,18 +1,25 @@
-use std::time::Duration;
+use std::{path::PathBuf, time::Duration};
 
 use crossterm::event::{self, Event, KeyCode};
 
 use crate::{command::CommandManager, config::Config, renderer::Renderer};
 
-pub struct Application {}
+#[derive(Debug)]
+pub struct Application {
+    config: Config,
+}
 
 impl Application {
+    pub fn new(config_location: Option<PathBuf>) -> crate::Result<Application> {
+        // TODO: switch to thiserror
+        let config = Config::read(config_location)?;
+        Ok(Self { config })
+    }
+
     pub fn run(&mut self, out: impl std::io::Write) -> crate::Result<()> {
         let mut commands = CommandManager::default();
 
-        let config = Config::read(None)?;
-
-        for command in config.commands {
+        for command in &self.config.commands {
             let command = command.run()?;
             commands.add_command(command)?;
         }

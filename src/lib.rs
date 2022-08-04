@@ -1,4 +1,5 @@
 pub mod application;
+pub mod cli;
 mod command;
 mod config;
 mod renderer;

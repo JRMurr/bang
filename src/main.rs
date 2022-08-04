@@ -1,7 +1,10 @@
-use bang::application::Application;
+use bang::{application::Application, cli::Cli};
+use clap::Parser;
 
 fn main() {
-    let mut app = Application {};
+    let args = Cli::parse();
+    println!("args: {:?}", args);
+    let mut app = Application::new(args.config).expect("Error making app");
 
     if let Err(e) = app.run(std::io::stdout()) {
         // app is now dropped we can print to stderr safely

@@ -1,0 +1,5 @@
+commands = [
+    {command = "ping -i 0.1 localhost"},
+    {command = "ping 1.1.1.1"},
+    {command = "ls", name = "list config dir", running_dir="~/.config/"},
+]

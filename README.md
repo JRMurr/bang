@@ -1,5 +1,7 @@
 # Bang
 
+Run multiple commands in parallel and hop between the output logs of each
+
 ## TODO
 - add hooks to clean up child processes on exit
   - I think this is being cleaned up already

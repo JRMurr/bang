@@ -37,7 +37,7 @@ fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Option<PathBuf> {
 }
 
 impl CommandBuilder {
-    pub fn run(self) -> crate::Result<Command> {
+    pub fn run(&self) -> crate::Result<Command> {
         let command = shell_words::split(&self.command)?;
 
         // TODO: add errors for parsing
@@ -50,7 +50,7 @@ impl CommandBuilder {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
-        if let Some(dir) = self.running_dir {
+        if let Some(dir) = &self.running_dir {
             let dir = expand_tilde(dir).unwrap();
             let dir = std::fs::canonicalize(dir)?;
             command_runner = command_runner.current_dir(dir);
@@ -68,10 +68,10 @@ impl CommandBuilder {
                 let mut buf = String::new();
                 match f.read_line(&mut buf) {
                     Ok(_) => {
-                        if let Err(e) = sender.send(buf) {
+                        if let Err(_e) = sender.send(buf) {
                             // disconnected. Right now only happens on exit so
                             // probably fine to ignore
-                            dbg!(e);
+                            // dbg!(e);
                         }
                     }
                     Err(e) => println!("an error!: {:?}", e),
@@ -79,9 +79,9 @@ impl CommandBuilder {
             }
         });
 
-        let name = self.name.unwrap_or(self.command);
+        let name = self.name.as_ref().unwrap_or(&self.command);
 
-        Ok(Command::new(name, receiver, child))
+        Ok(Command::new(name.clone(), receiver, child))
     }
 }
 
