@@ -86,6 +86,7 @@ impl CommandBuilder {
         let stderr = child.stderr.take().unwrap();
 
         let err_sender = sender.clone();
+
         thread::spawn(move || {
             Self::read_io(stdout, sender);
         });
