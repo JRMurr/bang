@@ -5,11 +5,6 @@ Run multiple commands in parallel and hop between the output logs of each
 ## TODO
 - add hooks to clean up child processes on exit
   - I think this is being cleaned up already
-- figure out layout.
-  - Lazy docker layout would be neat
-  - left side is list of all running commands
-  - main box of program input
-- figure out config format
 - would be nice to add way to kill/restart certain commands without killing all of them
 - make separate thread for reading input (maybe one for rendering?)
 - Handle errors properly

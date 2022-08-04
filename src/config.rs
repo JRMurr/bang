@@ -5,8 +5,15 @@ use serde::{Deserialize, Serialize};
 use crate::command::CommandBuilder;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Config {
+pub struct ConfigFile {
     pub commands: Vec<CommandBuilder>,
+}
+
+#[derive(Debug)]
+
+pub struct Config {
+    pub config: ConfigFile,
+    pub directory: PathBuf,
 }
 
 impl Config {
@@ -20,13 +27,20 @@ impl Config {
             }
         };
 
-        Self::create_or_get_config(&config_location)
+        Self::create_or_get_config(config_location)
     }
 
-    pub fn create_or_get_config(config_path: &PathBuf) -> anyhow::Result<Self> {
-        if let Ok(config_string) = std::fs::read_to_string(config_path) {
-            // We found a config file!
-            Ok(toml::from_str(config_string.as_str())?)
+    pub fn create_or_get_config(config_path: PathBuf) -> anyhow::Result<Self> {
+        if let Ok(config_string) = std::fs::read_to_string(&config_path) {
+            let config_file: ConfigFile =
+                toml::from_str(config_string.as_str())?;
+
+            let mut dir = std::fs::canonicalize(&config_path)?;
+            dir.pop(); // just get the directory
+            Ok(Self {
+                config: config_file,
+                directory: dir,
+            })
         } else {
             anyhow::bail!("sad");
             // // Config file DNE...

@@ -1,7 +1,7 @@
-use crossbeam::channel::{unbounded, Receiver};
+use crossbeam::channel::{unbounded, Receiver, Sender};
 use serde::{Deserialize, Serialize};
 use std::{
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, Read},
     path::{Path, PathBuf},
     process::{Child, Command as CommandRunner, Stdio},
     slice::Iter,
@@ -37,46 +37,60 @@ fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Option<PathBuf> {
 }
 
 impl CommandBuilder {
-    pub fn run(&self) -> crate::Result<Command> {
+    fn read_io<R: Read>(reader: R, sender: Sender<String>) {
+        let mut f = BufReader::new(reader);
+        loop {
+            let mut buf = String::new();
+            match f.read_line(&mut buf) {
+                Ok(_) => {
+                    if let Err(_e) = sender.send(buf) {
+                        // disconnected. Right now only happens on exit so
+                        // probably fine to ignore
+                        // dbg!(e);
+                    }
+                }
+                Err(e) => println!("an error!: {:?}", e),
+            }
+        }
+    }
+
+    pub fn run(&self, config_dir: &PathBuf) -> crate::Result<Command> {
         let command = shell_words::split(&self.command)?;
 
         // TODO: add errors for parsing
         let program = command.first().expect("Command should not be empty");
         let args = &command[1..];
+        // TODO: should we not always be realative to the config file?
+        let running_dir = match &self.running_dir {
+            Some(dir) => {
+                let dir = expand_tilde(dir).unwrap();
+                let running_dir = std::fs::canonicalize(dir)?;
+                // join the path with the config dir so relative paths make
+                // sense
+                Path::new(config_dir).join(running_dir)
+            }
+            None => Path::new(config_dir).to_path_buf(),
+        };
 
         let mut binding = CommandRunner::new(program);
-        let mut command_runner = binding
+        let mut child = binding
             .args(args)
             .stdout(Stdio::piped())
-            .stderr(Stdio::piped());
-
-        if let Some(dir) = &self.running_dir {
-            let dir = expand_tilde(dir).unwrap();
-            let dir = std::fs::canonicalize(dir)?;
-            command_runner = command_runner.current_dir(dir);
-        }
-
-        let mut child = command_runner
+            .stderr(Stdio::piped())
+            .current_dir(std::fs::canonicalize(dbg!(running_dir))?)
             .spawn()
             .unwrap_or_else(|_| panic!("failed to run {}", self.command));
 
         let (sender, receiver) = unbounded::<String>();
         let stdout = child.stdout.take().unwrap();
+        let stderr = child.stderr.take().unwrap();
+
+        let err_sender = sender.clone();
         thread::spawn(move || {
-            let mut f = BufReader::new(stdout);
-            loop {
-                let mut buf = String::new();
-                match f.read_line(&mut buf) {
-                    Ok(_) => {
-                        if let Err(_e) = sender.send(buf) {
-                            // disconnected. Right now only happens on exit so
-                            // probably fine to ignore
-                            // dbg!(e);
-                        }
-                    }
-                    Err(e) => println!("an error!: {:?}", e),
-                }
-            }
+            Self::read_io(stdout, sender);
+        });
+        thread::spawn(move || {
+            Self::read_io(stderr, err_sender);
         });
 
         let name = self.name.as_ref().unwrap_or(&self.command);

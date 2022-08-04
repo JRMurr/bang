@@ -3,7 +3,6 @@ use clap::Parser;
 
 fn main() {
     let args = Cli::parse();
-    println!("args: {:?}", args);
     let mut app = Application::new(args.config).expect("Error making app");
 
     if let Err(e) = app.run(std::io::stdout()) {

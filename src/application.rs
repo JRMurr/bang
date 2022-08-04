@@ -19,8 +19,8 @@ impl Application {
     pub fn run(&mut self, out: impl std::io::Write) -> crate::Result<()> {
         let mut commands = CommandManager::default();
 
-        for command in &self.config.commands {
-            let command = command.run()?;
+        for command in &self.config.config.commands {
+            let command = command.run(&self.config.directory)?;
             commands.add_command(command)?;
         }
         let mut renderer = Renderer::new(out)?;
