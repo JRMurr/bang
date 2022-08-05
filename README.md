@@ -21,3 +21,4 @@ Run multiple commands in parallel and hop between the output logs of each
 - https://github.com/DevinR528/rumatui/blob/main/src/main.rs
 - https://github.com/lemunozm/termchat
 - https://github.com/ClementTsang/bottom
+- https://github.com/kdheepak/taskwarrior-tui
