@@ -5,11 +5,11 @@ use std::{
     path::{Path, PathBuf},
     process::{Child, Command as CommandRunner, Stdio},
     slice::Iter,
-    thread,
+    thread::{self, JoinHandle},
 };
 use tui::widgets::{ListItem, ListState};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CommandBuilder {
     command: String,
     name: Option<String>,
@@ -47,6 +47,7 @@ impl CommandBuilder {
                         // disconnected. Right now only happens on exit so
                         // probably fine to ignore
                         // dbg!(e);
+                        break;
                     }
                 }
                 Err(e) => println!("an error!: {:?}", e),
@@ -77,7 +78,7 @@ impl CommandBuilder {
             .args(args)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
-            .current_dir(std::fs::canonicalize(dbg!(running_dir))?)
+            .current_dir(std::fs::canonicalize(running_dir)?)
             .spawn()
             .unwrap_or_else(|_| panic!("failed to run {}", self.command));
 
@@ -87,16 +88,23 @@ impl CommandBuilder {
 
         let err_sender = sender.clone();
 
-        thread::spawn(move || {
+        // TODO: might be good to switch to tokio async tasks
+        let out_thread = thread::spawn(move || {
             Self::read_io(stdout, sender);
         });
-        thread::spawn(move || {
+        let err_thread = thread::spawn(move || {
             Self::read_io(stderr, err_sender);
         });
 
         let name = self.name.as_ref().unwrap_or(&self.command);
 
-        Ok(Command::new(name.clone(), receiver, child))
+        Ok(Command::new(
+            name.clone(),
+            receiver,
+            child,
+            self.to_owned(),
+            vec![out_thread, err_thread],
+        ))
     }
 }
 
@@ -107,17 +115,37 @@ pub struct Command {
     lines: Vec<String>,
     pub state: ListState,
     child: Child,
+
+    builder: CommandBuilder,
+    // TODO: might need to join these on drop?
+    threads: Vec<JoinHandle<()>>,
 }
 
 impl Command {
-    pub fn new(name: String, receiver: Receiver<String>, child: Child) -> Self {
+    pub fn new(
+        name: String,
+        receiver: Receiver<String>,
+        child: Child,
+        builder: CommandBuilder,
+        threads: Vec<JoinHandle<()>>,
+    ) -> Self {
         Self {
             name,
             receiver,
             child,
+            builder,
+            threads,
             lines: Vec::new(),
             state: ListState::default(),
         }
+    }
+
+    pub fn restart(&mut self, config_dir: &PathBuf) -> crate::Result<()> {
+        let new = self.builder.run(config_dir)?;
+        let old = std::mem::replace(self, new);
+        // TODO: not sure if this is needed
+        std::mem::drop(old);
+        Ok(())
     }
 
     pub fn populate_lines(&mut self) {
@@ -204,9 +232,6 @@ impl CommandManager {
         self.state.select(Some(i));
     }
 
-    // Select the previous item. This will not be reflected until the widget is
-    // drawn in the `Terminal::draw` callback using
-    // `Frame::render_stateful_widget`.
     pub fn previous(&mut self) {
         let i = match self.state.selected() {
             Some(i) => {

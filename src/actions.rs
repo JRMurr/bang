@@ -20,6 +20,7 @@ impl TryFrom<crossterm::event::KeyEvent> for Actions {
     fn try_from(key: crossterm::event::KeyEvent) -> Result<Self, Self::Error> {
         let action = match key.code {
             KeyCode::Char('q') => Actions::Exit,
+            KeyCode::Char('r') => Actions::Restart,
             KeyCode::Up => Actions::Previous,
             KeyCode::Down => Actions::Next,
             _ => return Err(()),

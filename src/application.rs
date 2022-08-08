@@ -40,7 +40,10 @@ impl Application {
                     match action {
                         Actions::Exit => return Ok(()),
                         Actions::Kill => todo!(),
-                        Actions::Restart => todo!(),
+                        Actions::Restart => {
+                            let selected = commands.get_selected();
+                            selected.restart(&self.config.directory)?;
+                        },
                         Actions::Previous => commands.previous(),
                         Actions::Next => commands.next(),
                     }
