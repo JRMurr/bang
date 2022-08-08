@@ -2,7 +2,10 @@ use std::{path::PathBuf, time::Duration};
 
 use crossterm::event::{self, Event, KeyCode};
 
-use crate::{command::CommandManager, config::Config, renderer::Renderer};
+use crate::{
+    actions::Actions, command::CommandManager, config::Config,
+    renderer::Renderer,
+};
 
 #[derive(Debug)]
 pub struct Application {
@@ -33,11 +36,14 @@ impl Application {
 
         loop {
             if event::poll(Duration::from_millis(16))? && let Event::Key(key) = event::read()? {
-                match key.code {
-                    KeyCode::Char('q') => return Ok(()), // exit on q
-                    KeyCode::Up => commands.previous(),
-                    KeyCode::Down => commands.next(),
-                    _ => {}
+                if let Ok(action) = key.try_into() {
+                    match action {
+                        Actions::Exit => return Ok(()),
+                        Actions::Kill => todo!(),
+                        Actions::Restart => todo!(),
+                        Actions::Previous => commands.previous(),
+                        Actions::Next => commands.next(),
+                    }
                 }
             }
 

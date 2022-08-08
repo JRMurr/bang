@@ -1,3 +1,4 @@
+mod actions;
 pub mod application;
 pub mod cli;
 mod command;
