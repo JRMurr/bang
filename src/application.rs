@@ -1,6 +1,7 @@
 use std::{path::PathBuf, time::Duration};
 
-use crossterm::event::{self, Event, KeyCode};
+use crossbeam::channel::Sender;
+use crossterm::event::{self, Event, KeyCode, KeyEvent};
 
 use crate::{
     actions::Actions, command::CommandManager, config::Config,
@@ -39,9 +40,10 @@ impl Application {
 
         let mut renderer = Renderer::new(out)?;
         renderer.render(&mut commands, false)?;
-
+        let (sender, receiver) = crossbeam::channel::unbounded::<KeyEvent>();
+        create_input_thread(sender);
         loop {
-            if event::poll(Duration::from_millis(16))? && let Event::Key(key) = event::read()? {
+            if let Ok(key) = receiver.try_recv() {
                 if !self.in_help && let Ok(action) = key.try_into() {
                     match action {
                         Actions::Exit => return Ok(()),
@@ -69,4 +71,14 @@ impl Application {
             renderer.render(&mut commands, self.in_help)?;
         }
     }
+}
+
+fn create_input_thread(
+    sender: Sender<KeyEvent>,
+) -> std::thread::JoinHandle<()> {
+    std::thread::spawn(move || loop {
+        if let Ok(poll) = event::poll(Duration::from_millis(20)) && poll && let Ok(Event::Key(key)) = event::read() && sender.send(key).is_err() {
+            break;
+        }
+    })
 }
