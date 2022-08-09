@@ -1,10 +1,10 @@
 use std::{io::Write, vec};
 use tui::{
     backend::CrosstermBackend,
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::{Span, Spans, Text},
-    widgets::{Block, Borders, List, ListItem, Paragraph, Row, Table, Wrap},
+    text::{Span, Text},
+    widgets::{Block, Borders, List, ListItem, Paragraph, Row, Table},
     Frame,
 };
 
