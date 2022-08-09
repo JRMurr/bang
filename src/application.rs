@@ -40,7 +40,7 @@ impl Application {
 
         let mut renderer = Renderer::new(out)?;
         renderer.render(&mut commands, false)?;
-        let (sender, receiver) = crossbeam::channel::unbounded::<KeyEvent>();
+        let (sender, receiver) = crossbeam::channel::bounded(10);
         create_input_thread(sender);
         loop {
             if let Ok(key) = receiver.try_recv() {
@@ -57,6 +57,9 @@ impl Application {
                         },
                         Actions::Previous => commands.previous(),
                         Actions::Next => commands.next(),
+                        Actions::Scroll(dir) => {
+                            todo!();
+                        }
                         Actions::Help => {
                             self.in_help = true;
                         }

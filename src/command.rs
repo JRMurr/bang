@@ -1,4 +1,4 @@
-use crossbeam::channel::{unbounded, Receiver, Sender};
+use crossbeam::channel::{bounded, Receiver, Sender};
 use serde::{Deserialize, Serialize};
 use std::{
     io::{BufRead, BufReader, Read},
@@ -82,7 +82,7 @@ impl CommandBuilder {
             .spawn()
             .unwrap_or_else(|_| panic!("failed to run {}", self.command));
 
-        let (sender, receiver) = unbounded::<String>();
+        let (sender, receiver) = bounded::<String>(100);
         let stdout = child.stdout.take().unwrap();
         let stderr = child.stderr.take().unwrap();
 
@@ -139,10 +139,9 @@ impl Command {
     }
 
     pub fn populate_lines(&mut self) {
-        // TODO: handle error of disconnected https://docs.rs/crossbeam/0.8.2/crossbeam/channel/enum.TryRecvError.html
-
-        if let Ok(line) = self.receiver.try_recv() {
-            self.lines.push(line);
+        let mut new_lines: Vec<String> = self.receiver.try_iter().collect();
+        self.lines.append(&mut new_lines);
+        if !self.lines.is_empty() {
             self.state.select(Some(self.lines.len() - 1));
         }
     }

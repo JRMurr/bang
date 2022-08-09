@@ -1,5 +1,10 @@
 use crossterm::event::KeyCode;
 
+pub enum ScrollDirection {
+    Up, // who doesn't love reinventing bools
+    Down,
+}
+
 /// Actions to control bang
 pub enum Actions {
     /// Exit bang
@@ -12,6 +17,8 @@ pub enum Actions {
     Previous,
     /// Select next command
     Next,
+    /// Scroll the output
+    Scroll(ScrollDirection),
     /// Go to Help Screen
     Help,
 }
