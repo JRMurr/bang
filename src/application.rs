@@ -47,6 +47,7 @@ impl Application {
                 if !self.in_help && let Ok(action) = key.try_into() {
                     match action {
                         Actions::Exit => return Ok(()),
+                        // TODO: add map selected helper
                         Actions::Kill => {
                             let selected = commands.get_selected();
                             selected.kill()?;
@@ -58,7 +59,8 @@ impl Application {
                         Actions::Previous => commands.previous(),
                         Actions::Next => commands.next(),
                         Actions::Scroll(dir) => {
-                            todo!();
+                            let selected = commands.get_selected();
+                            selected.scroll(dir);
                         }
                         Actions::Help => {
                             self.in_help = true;
@@ -80,7 +82,7 @@ fn create_input_thread(
     sender: Sender<KeyEvent>,
 ) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || loop {
-        if let Ok(poll) = event::poll(Duration::from_millis(20)) && poll && let Ok(Event::Key(key)) = event::read() && sender.send(key).is_err() {
+        if let Ok(poll) = event::poll(Duration::from_millis(10)) && poll && let Ok(Event::Key(key)) = event::read() && sender.send(key).is_err() {
             break;
         }
     })

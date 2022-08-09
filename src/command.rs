@@ -9,6 +9,8 @@ use std::{
 };
 use tui::widgets::{ListItem, ListState};
 
+use crate::actions::ScrollDirection;
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CommandBuilder {
     command: String,
@@ -125,7 +127,7 @@ impl Command {
             receiver,
             child,
             builder,
-            lines: Vec::new(),
+            lines: Vec::with_capacity(100),
             state: ListState::default(),
         }
     }
@@ -140,9 +142,29 @@ impl Command {
 
     pub fn populate_lines(&mut self) {
         let mut new_lines: Vec<String> = self.receiver.try_iter().collect();
-        self.lines.append(&mut new_lines);
-        if !self.lines.is_empty() {
-            self.state.select(Some(self.lines.len() - 1));
+        let cursor_auto_scroll = self
+            .state
+            .selected()
+            .map_or(true, |curr| curr >= self.lines.len() - 1);
+        if !new_lines.is_empty() {
+            self.lines.append(&mut new_lines);
+            if cursor_auto_scroll {
+                self.state.select(Some(self.lines.len() - 1));
+            }
+        }
+    }
+
+    pub fn scroll(&mut self, dir: ScrollDirection) {
+        if let Some(curr) = self.state.selected() {
+            let new_pos = match dir {
+                ScrollDirection::Up => curr.saturating_sub(1),
+                ScrollDirection::Down => {
+                    std::cmp::min(curr + 1, self.lines.len())
+                }
+            };
+            // TODO: this is not scrolling properly
+            // eprintln!("pos: {}, curr: {}", new_pos, curr);
+            self.state.select(Some(new_pos));
         }
     }
 

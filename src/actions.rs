@@ -1,4 +1,4 @@
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 pub enum ScrollDirection {
     Up, // who doesn't love reinventing bools
@@ -23,10 +23,19 @@ pub enum Actions {
     Help,
 }
 
-impl TryFrom<crossterm::event::KeyEvent> for Actions {
+impl TryFrom<KeyEvent> for Actions {
     type Error = ();
 
-    fn try_from(key: crossterm::event::KeyEvent) -> Result<Self, Self::Error> {
+    fn try_from(key: KeyEvent) -> Result<Self, Self::Error> {
+        if key.modifiers == KeyModifiers::SHIFT {
+            let action = match key.code {
+                KeyCode::Up => Actions::Scroll(ScrollDirection::Up),
+                KeyCode::Down => Actions::Scroll(ScrollDirection::Down),
+                _ => return Err(()),
+            };
+            return Ok(action);
+        }
+
         let action = match key.code {
             KeyCode::Char('q') => Actions::Exit,
             KeyCode::Char('r') => Actions::Restart,
