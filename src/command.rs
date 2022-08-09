@@ -166,12 +166,22 @@ impl Command {
 
         (&mut self.state, lines)
     }
+
+    pub fn kill(&mut self) -> crate::Result<()> {
+        if let Err(e) = self.child.kill() {
+            // InvalidInput when child already killed
+            if e.kind() != std::io::ErrorKind::InvalidInput {
+                return Err(Box::new(e));
+            }
+        }
+        self.child.wait()?;
+        Ok(())
+    }
 }
 
 impl Drop for Command {
     fn drop(&mut self) {
-        self.child.kill().expect("sad");
-        self.child.wait().expect("sad 2.");
+        let _ = self.kill();
     }
 }
 

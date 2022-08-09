@@ -21,6 +21,8 @@ impl TryFrom<crossterm::event::KeyEvent> for Actions {
         let action = match key.code {
             KeyCode::Char('q') => Actions::Exit,
             KeyCode::Char('r') => Actions::Restart,
+            KeyCode::Char('k') => Actions::Kill,
+
             KeyCode::Up => Actions::Previous,
             KeyCode::Down => Actions::Next,
             _ => return Err(()),
