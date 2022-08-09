@@ -12,6 +12,8 @@ pub enum Actions {
     Previous,
     /// Select next command
     Next,
+    /// Go to Help Screen
+    Help,
 }
 
 impl TryFrom<crossterm::event::KeyEvent> for Actions {
@@ -22,6 +24,7 @@ impl TryFrom<crossterm::event::KeyEvent> for Actions {
             KeyCode::Char('q') => Actions::Exit,
             KeyCode::Char('r') => Actions::Restart,
             KeyCode::Char('k') => Actions::Kill,
+            KeyCode::Char('?') => Actions::Help,
 
             KeyCode::Up => Actions::Previous,
             KeyCode::Down => Actions::Next,

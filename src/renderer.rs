@@ -24,9 +24,15 @@ impl<W: Write> Renderer<W> {
     pub fn render(
         &mut self,
         commands: &mut CommandManager,
+        show_help: bool,
     ) -> crate::Result<()> {
-        self.terminal
-            .draw(|frame| crate::ui::draw(frame, commands))?;
+        self.terminal.draw(|frame| {
+            if show_help {
+                crate::ui::draw_help_menu(frame)
+            } else {
+                crate::ui::draw(frame, commands)
+            }
+        })?;
         Ok(())
     }
 }

@@ -3,12 +3,8 @@
 Run multiple commands in parallel and hop between the output logs of each
 
 ## TODO
-- add hooks to clean up child processes on exit
-  - I think this is being cleaned up already
-- would be nice to add way to kill/restart certain commands without killing all of them
 - make separate thread for reading input (maybe one for rendering?)
 - Handle errors properly
-- Make message types to pass around threads
 - Log scrolling
   - basic scrolling works but support user scrolling
 - handle errors of commands gracefully

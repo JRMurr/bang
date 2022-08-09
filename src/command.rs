@@ -5,7 +5,7 @@ use std::{
     path::{Path, PathBuf},
     process::{Child, Command as CommandRunner, Stdio},
     slice::Iter,
-    thread::{self, JoinHandle},
+    thread::{self},
 };
 use tui::widgets::{ListItem, ListState};
 
@@ -89,22 +89,16 @@ impl CommandBuilder {
         let err_sender = sender.clone();
 
         // TODO: might be good to switch to tokio async tasks
-        let out_thread = thread::spawn(move || {
+        thread::spawn(move || {
             Self::read_io(stdout, sender);
         });
-        let err_thread = thread::spawn(move || {
+        thread::spawn(move || {
             Self::read_io(stderr, err_sender);
         });
 
         let name = self.name.as_ref().unwrap_or(&self.command);
 
-        Ok(Command::new(
-            name.clone(),
-            receiver,
-            child,
-            self.to_owned(),
-            vec![out_thread, err_thread],
-        ))
+        Ok(Command::new(name.clone(), receiver, child, self.to_owned()))
     }
 }
 
@@ -117,8 +111,6 @@ pub struct Command {
     child: Child,
 
     builder: CommandBuilder,
-    // TODO: might need to join these on drop?
-    threads: Vec<JoinHandle<()>>,
 }
 
 impl Command {
@@ -127,14 +119,12 @@ impl Command {
         receiver: Receiver<String>,
         child: Child,
         builder: CommandBuilder,
-        threads: Vec<JoinHandle<()>>,
     ) -> Self {
         Self {
             name,
             receiver,
             child,
             builder,
-            threads,
             lines: Vec::new(),
             state: ListState::default(),
         }
