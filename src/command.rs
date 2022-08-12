@@ -154,12 +154,12 @@ impl Command {
         }
     }
 
-    pub fn scroll(&mut self, dir: ScrollDirection) {
+    pub fn scroll(&mut self, dir: ScrollDirection, amount: usize) {
         if let Some(curr) = self.state.selected() {
             let new_pos = match dir {
-                ScrollDirection::Up => curr.saturating_sub(1),
+                ScrollDirection::Up => curr.saturating_sub(amount),
                 ScrollDirection::Down => {
-                    std::cmp::min(curr + 1, self.lines.len())
+                    std::cmp::min(curr + amount, self.lines.len())
                 }
             };
             // TODO: this is not scrolling properly

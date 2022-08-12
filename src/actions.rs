@@ -17,8 +17,8 @@ pub enum Actions {
     Previous,
     /// Select next command
     Next,
-    /// Scroll the output
-    Scroll(ScrollDirection),
+    /// Scroll the output. Direction and multiple
+    Scroll(ScrollDirection, usize),
     /// Go to Help Screen
     Help,
 }
@@ -29,8 +29,15 @@ impl TryFrom<KeyEvent> for Actions {
     fn try_from(key: KeyEvent) -> Result<Self, Self::Error> {
         if key.modifiers == KeyModifiers::SHIFT {
             let action = match key.code {
-                KeyCode::Up => Actions::Scroll(ScrollDirection::Up),
-                KeyCode::Down => Actions::Scroll(ScrollDirection::Down),
+                KeyCode::Up => Actions::Scroll(ScrollDirection::Up, 1),
+                KeyCode::Down => Actions::Scroll(ScrollDirection::Down, 1),
+                _ => return Err(()),
+            };
+            return Ok(action);
+        } else if key.modifiers == KeyModifiers::CONTROL {
+            let action = match key.code {
+                KeyCode::Up => Actions::Scroll(ScrollDirection::Up, 10),
+                KeyCode::Down => Actions::Scroll(ScrollDirection::Down, 10),
                 _ => return Err(()),
             };
             return Ok(action);

@@ -58,9 +58,9 @@ impl Application {
                         },
                         Actions::Previous => commands.previous(),
                         Actions::Next => commands.next(),
-                        Actions::Scroll(dir) => {
+                        Actions::Scroll(dir, amount) => {
                             let selected = commands.get_selected();
-                            selected.scroll(dir);
+                            selected.scroll(dir, amount);
                         }
                         Actions::Help => {
                             self.in_help = true;

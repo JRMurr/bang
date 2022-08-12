@@ -120,6 +120,9 @@ fn draw_command_output(
     let (state, list) = command.draw_info();
 
     let output = List::new(list)
-        .block(Block::default().borders(Borders::ALL).title("Output"));
+        .block(Block::default().borders(Borders::ALL).title("Output"))
+        // TODO: remove the higlight
+        .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
+        .highlight_symbol(">>");
     frame.render_stateful_widget(output, chunk, state);
 }
