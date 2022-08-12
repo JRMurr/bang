@@ -162,8 +162,9 @@ impl Command {
                     std::cmp::min(curr + amount, self.lines.len())
                 }
             };
-            // TODO: this is not scrolling properly
-            // eprintln!("pos: {}, curr: {}", new_pos, curr);
+            // TODO: this only selects the previous line so they need to go
+            // all the way to the top for the screen to scroll
+            // might need to fork the list wigit to update the logic
             self.state.select(Some(new_pos));
         }
     }
