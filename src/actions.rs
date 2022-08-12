@@ -1,4 +1,5 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use log::info;
 
 /// What direction to scroll in
 pub enum ScrollDirection {
@@ -30,6 +31,7 @@ impl TryFrom<KeyEvent> for Actions {
     type Error = ();
 
     fn try_from(key: KeyEvent) -> Result<Self, Self::Error> {
+        info!("event: {:?}", key);
         if key.modifiers == KeyModifiers::SHIFT {
             let action = match key.code {
                 KeyCode::Up => Actions::Scroll(ScrollDirection::Up, 1),

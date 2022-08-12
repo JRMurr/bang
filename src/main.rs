@@ -1,12 +1,35 @@
 use bang::{application::Application, cli::Cli};
 use clap::Parser;
 
-fn main() {
-    let args = Cli::parse();
-    let mut app = Application::new(args.config).expect("Error making app");
+fn run() -> bang::Result<()> {
+    // TODO: probably feature flag this
+    fern::Dispatch::new()
+        .format(|out, message, record| {
+            let offset = time::OffsetDateTime::now_utc();
 
-    if let Err(e) = app.run(std::io::stdout()) {
-        // app is now dropped we can print to stderr safely
+            out.finish(format_args!(
+                "{}[{}][{}] {}",
+                offset
+                    .format(&time::macros::format_description!(
+                        // The weird "[[[" is because we need to escape a bracket ("[[") to show one "[".
+                        // See https://time-rs.github.io/book/api/format-description.html
+                        "[[[year]-[month]-[day]][[[hour]:[minute]:[second][subsecond digits:9]]"
+                    ))
+                    .unwrap(),
+                record.target(),
+                record.level(),
+                message
+            ))
+        })
+        .chain(fern::log_file("bang.log")?).apply()?;
+    let args = Cli::parse();
+    let mut app = Application::new(args.config)?;
+
+    app.run(std::io::stdout())
+}
+
+fn main() {
+    if let Err(e) = run() {
         eprintln!("sad: {}", e);
     };
 }
