@@ -1,4 +1,5 @@
 use crossbeam::channel::{bounded, Receiver, Sender};
+use log::{info, trace};
 use serde::{Deserialize, Serialize};
 use std::{
     io::{BufRead, BufReader, Read},
@@ -44,15 +45,19 @@ impl CommandBuilder {
         loop {
             let mut buf = String::new();
             match f.read_line(&mut buf) {
-                Ok(_) => {
+                Ok(data_read) => {
                     if let Err(_e) = sender.send(buf) {
                         // disconnected. Right now only happens on exit so
                         // probably fine to ignore
                         // dbg!(e);
                         break;
                     }
+                    if data_read == 0 {
+                        // hit eof
+                        break;
+                    }
                 }
-                Err(e) => println!("an error!: {:?}", e),
+                Err(e) => trace!("an error!: {:?}", e),
             }
         }
     }
@@ -84,12 +89,13 @@ impl CommandBuilder {
             .spawn()
             .unwrap_or_else(|_| panic!("failed to run {}", self.command));
 
+        let name = self.name.as_ref().unwrap_or(&self.command);
+
         let (sender, receiver) = bounded::<String>(100);
         let stdout = child.stdout.take().unwrap();
         let stderr = child.stderr.take().unwrap();
 
         let err_sender = sender.clone();
-
         // TODO: might be good to switch to tokio async tasks
         thread::spawn(move || {
             Self::read_io(stdout, sender);
@@ -97,8 +103,6 @@ impl CommandBuilder {
         thread::spawn(move || {
             Self::read_io(stderr, err_sender);
         });
-
-        let name = self.name.as_ref().unwrap_or(&self.command);
 
         Ok(Command::new(name.clone(), receiver, child, self.to_owned()))
     }
