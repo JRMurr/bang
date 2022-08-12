@@ -8,6 +8,7 @@ use crate::{
     renderer::Renderer,
 };
 
+/// The main app
 #[derive(Debug)]
 pub struct Application {
     config: Config,
@@ -17,6 +18,7 @@ pub struct Application {
 }
 
 impl Application {
+    /// Create the application
     pub fn new(config_location: Option<PathBuf>) -> crate::Result<Application> {
         // TODO: switch to thiserror
         let config = Config::read(config_location)?;
@@ -26,6 +28,7 @@ impl Application {
         })
     }
 
+    /// Run the application
     pub fn run(&mut self, out: impl std::io::Write) -> crate::Result<()> {
         let mut commands = CommandManager::default();
 

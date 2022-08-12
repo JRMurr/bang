@@ -1,7 +1,10 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
+/// What direction to scroll in
 pub enum ScrollDirection {
-    Up, // who doesn't love reinventing bools
+    /// Scroll up
+    Up,
+    /// Scroll down
     Down,
 }
 
