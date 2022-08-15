@@ -1,5 +1,4 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use log::info;
 
 /// What direction to scroll in
 pub enum ScrollDirection {

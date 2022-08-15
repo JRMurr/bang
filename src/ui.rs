@@ -34,9 +34,9 @@ pub fn draw_help_menu(frame: &mut Frame<CrosstermBackend<impl Write>>) {
         .direction(Direction::Horizontal)
         .constraints(
             [
-                Constraint::Percentage(15),
-                Constraint::Percentage(70),
-                Constraint::Percentage(15),
+                Constraint::Percentage(10),
+                Constraint::Percentage(80),
+                Constraint::Percentage(10),
             ]
             .as_ref(),
         )
@@ -47,7 +47,12 @@ pub fn draw_help_menu(frame: &mut Frame<CrosstermBackend<impl Write>>) {
 
     let rows = vec![
         ("Select Previous Command", "<Up Arrow>"),
-        ("Select next Command", "<Down Arrow>"),
+        ("Select Next Command", "<Down Arrow>"),
+        ("Scroll output (slow)", "Shift + <Up Arrow>/<Down Arrow>"),
+        (
+            "Scroll output (faster)",
+            "Control + <Up Arrow>/<Down Arrow>",
+        ),
         ("Restart Command", "r"),
         ("Kill Command", "k"),
         ("Quit bang", "q"),
@@ -70,7 +75,7 @@ pub fn draw_help_menu(frame: &mut Frame<CrosstermBackend<impl Write>>) {
                 .border_style(help_menu_style),
         )
         .style(help_menu_style)
-        .widths(&[Constraint::Percentage(90), Constraint::Percentage(10)]);
+        .widths(&[Constraint::Percentage(80), Constraint::Percentage(20)]);
     frame.render_widget(help_menu, chunks[1]);
 }
 

@@ -1,5 +1,5 @@
 use crossbeam::channel::{bounded, Receiver, Sender};
-use log::{info, trace};
+use log::trace;
 use serde::{Deserialize, Serialize};
 use std::{
     io::{BufRead, BufReader, Read},
