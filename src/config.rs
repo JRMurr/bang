@@ -21,8 +21,9 @@ impl Config {
         let config_location = match config_location {
             Some(c) => c,
             None => {
-                let mut home_path = dirs::config_dir().unwrap();
-                home_path.push("./bang/bang.toml");
+                // TODO: maybe we `config_dir` on non macos
+                let mut home_path = dirs::home_dir().unwrap();
+                home_path.push("./.config/bang/bang.toml");
                 home_path
             }
         };
@@ -42,7 +43,7 @@ impl Config {
                 directory: dir,
             })
         } else {
-            anyhow::bail!("sad");
+            anyhow::bail!("config not found at {}", config_path.display());
             // // Config file DNE...
             // if let Some(parent_path) = path.parent() {
             //     fs::create_dir_all(parent_path)?;
