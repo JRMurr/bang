@@ -19,6 +19,7 @@ commands = [
 Then run `bang`. Type `?` to see help.
 
 ## TODO
+- look into [cursive](https://github.com/gyscos/cursive) since it might be easier to not re-draw as much
 - only re-draw if something updated. Look at [tokio console](https://github.com/tokio-rs/console/blob/3bf60bce7b478c189a3145311e06f14cb2fc1e11/tokio-console/src/main.rs#L73)
 - Handle errors properly (maybe just use color_erye)
 - Log scrolling

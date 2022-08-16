@@ -10,7 +10,7 @@ anyhow = "1.0.58"
 clap = { version = "3.2.16", features = ["derive"] }
 console-subscriber = "0.1.7"
 crossbeam = "0.8"
-crossterm = { version = "0.24", features = ["event-stream"] }
+crossterm = { version = "0.25", features = ["event-stream"] }
 dirs = "4.0.0"
 fern = "0.6.1"
 futures = "0.3.23"
@@ -23,4 +23,4 @@ time = { version = "0.3.13", features = ["formatting", "macros"] }
 tokio = { version = "1.20.1", features = ["rt", "process", "macros", "io-util", "rt-multi-thread", "tracing", "time"] }
 toml = "0.5.9"
 tracing = "0.1.36"
-tui = "0.18"
+tui = "0.19"
