@@ -1,12 +1,13 @@
 use std::{path::PathBuf, time::Duration};
 
-use crossbeam::channel::Sender;
-use crossterm::event::{self, Event, KeyCode, KeyEvent};
-
 use crate::{
     actions::Actions, command::CommandManager, config::Config,
     renderer::Renderer,
 };
+use crossbeam::channel::Sender;
+use crossterm::event::{Event, EventStream, KeyCode, KeyEvent};
+use futures::{future::FutureExt, select, StreamExt};
+use futures_timer::Delay;
 
 /// The main app
 #[derive(Debug)]
@@ -29,7 +30,7 @@ impl Application {
     }
 
     /// Run the application
-    pub fn run(&mut self, out: impl std::io::Write) -> crate::Result<()> {
+    pub async fn run(&mut self, out: impl std::io::Write) -> crate::Result<()> {
         let mut commands = CommandManager::default();
 
         let config_dir = &self.config.directory;
@@ -53,7 +54,7 @@ impl Application {
                         // TODO: add map selected helper
                         Actions::Kill => {
                             let selected = commands.get_selected();
-                            selected.kill()?;
+                            selected.kill().await?;
                         },
                         Actions::Restart => {
                             let selected = commands.get_selected();
@@ -81,12 +82,34 @@ impl Application {
     }
 }
 
-fn create_input_thread(
-    sender: Sender<KeyEvent>,
-) -> std::thread::JoinHandle<()> {
-    std::thread::spawn(move || loop {
-        if let Ok(poll) = event::poll(Duration::from_millis(10)) && poll && let Ok(Event::Key(key)) = event::read() && sender.send(key).is_err() {
-            break;
+fn create_input_thread(sender: Sender<KeyEvent>) {
+    tokio::spawn(async move {
+        let mut reader = EventStream::new();
+
+        loop {
+            // if let Ok(poll) = event::poll(Duration::from_millis(10)) && poll
+            // && let Ok(Event::Key(key)) = event::read() &&
+            // sender.send(key).is_err() {     break;
+            // }
+            let mut delay = Delay::new(Duration::from_millis(10)).fuse();
+            let mut event = reader.next().fuse();
+
+            select! {
+                _ = delay => {},
+                maybe_event = event => {
+                    match maybe_event {
+                        Some(Ok(event)) => {
+                            if let Event::Key(key) = event {
+                                if sender.send(key).is_err() {
+                                    break;
+                                }
+                            }
+                        }
+                        Some(Err(e)) => panic!("Error: {:?}\r", e),
+                        None => break,
+                    }
+                }
+            }
         }
-    })
+    });
 }

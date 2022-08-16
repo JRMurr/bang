@@ -9,13 +9,16 @@ edition = "2021"
 anyhow = "1.0.58"
 clap = { version = "3.2.16", features = ["derive"] }
 crossbeam = "0.8"
-crossterm = "0.24"
+crossterm = { version = "0.24", features = ["event-stream"] }
 dirs = "4.0.0"
 fern = "0.6.1"
+futures = "0.3.23"
+futures-timer = "3.0.2"
 log = "0.4.17"
 serde = { version = "1.0.140", features = ["derive"] }
 shell-words = "1.1.0"
 thiserror = "1.0.31"
 time = { version = "0.3.13", features = ["formatting", "macros"] }
+tokio = { version = "1.20.1", features = ["rt", "process", "macros", "io-util", "rt-multi-thread"] }
 toml = "0.5.9"
 tui = "0.18"

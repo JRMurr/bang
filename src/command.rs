@@ -2,11 +2,13 @@ use crossbeam::channel::{bounded, Receiver, Sender};
 use log::trace;
 use serde::{Deserialize, Serialize};
 use std::{
-    io::{BufRead, BufReader, Read},
     path::{Path, PathBuf},
-    process::{Child, Command as CommandRunner, Stdio},
+    process::Stdio,
     slice::Iter,
-    thread::{self},
+};
+use tokio::{
+    io::{AsyncBufReadExt, AsyncRead, BufReader},
+    process::{Child, Command as CommandRunner},
 };
 use tui::widgets::{ListItem, ListState};
 
@@ -40,11 +42,14 @@ fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Option<PathBuf> {
 }
 
 impl CommandBuilder {
-    fn read_io<R: Read>(reader: R, sender: Sender<String>) {
+    async fn read_io<R: AsyncRead + std::marker::Unpin>(
+        reader: R,
+        sender: Sender<String>,
+    ) {
         let mut f = BufReader::new(reader);
         loop {
             let mut buf = String::new();
-            match f.read_line(&mut buf) {
+            match f.read_line(&mut buf).await {
                 Ok(data_read) => {
                     if let Err(_e) = sender.send(buf) {
                         // disconnected. Right now only happens on exit so
@@ -86,6 +91,7 @@ impl CommandBuilder {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .current_dir(std::fs::canonicalize(running_dir)?)
+            .kill_on_drop(true)
             .spawn()
             .unwrap_or_else(|_| panic!("failed to run {}", self.command));
 
@@ -97,11 +103,11 @@ impl CommandBuilder {
 
         let err_sender = sender.clone();
         // TODO: might be good to switch to tokio async tasks
-        thread::spawn(move || {
-            Self::read_io(stdout, sender);
+        tokio::spawn(async move {
+            Self::read_io(stdout, sender).await;
         });
-        thread::spawn(move || {
-            Self::read_io(stderr, err_sender);
+        tokio::spawn(async move {
+            Self::read_io(stderr, err_sender).await;
         });
 
         Ok(Command::new(name.clone(), receiver, child, self.to_owned()))
@@ -183,23 +189,23 @@ impl Command {
         (&mut self.state, lines)
     }
 
-    pub fn kill(&mut self) -> crate::Result<()> {
-        if let Err(e) = self.child.kill() {
+    pub async fn kill(&mut self) -> crate::Result<()> {
+        if let Err(e) = self.child.kill().await {
             // InvalidInput when child already killed
             if e.kind() != std::io::ErrorKind::InvalidInput {
                 return Err(Box::new(e));
             }
         }
-        self.child.wait()?;
+        self.child.wait().await?;
         Ok(())
     }
 }
 
-impl Drop for Command {
-    fn drop(&mut self) {
-        let _ = self.kill();
-    }
-}
+// impl Drop for Command {
+//     fn drop(&mut self) {
+//         let _ = self.kill();
+//     }
+// }
 
 #[derive(Debug, Default)]
 pub struct CommandManager {

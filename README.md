@@ -21,8 +21,8 @@ Then run `bang`. Type `?` to see help.
 ## TODO
 - Handle errors properly
 - Log scrolling
-  - Need to fork the built-in list widget to get access to `ListState.output`/(getItemBounds)[https://github.com/fdehau/tui-rs/blob/fafad6c96109610825aad89c4bba5253e01101ed/src/widgets/list.rs#L131]
-  - The issue is right now scolling works by selected the last/next line. If the selected line is the last line (in auto-scroll mode) we should select the line right before the top line on the screen so we see older outputs
+  - Need to fork the built-in list widget to get access to `ListState.output`/[getItemBounds](https://github.com/fdehau/tui-rs/blob/fafad6c96109610825aad89c4bba5253e01101ed/src/widgets/list.rs#L131)
+  - The issue is right now scrolling works by selected the last/next line. If the selected line is the last line (in auto-scroll mode) we should select the line right before the top line on the screen so we see older outputs
 - handle errors of commands gracefully
 - tests :(
   - can get by with mostly config/path reading stuff

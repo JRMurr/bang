@@ -1,7 +1,7 @@
 use bang::{application::Application, cli::Cli};
 use clap::Parser;
 
-fn run() -> bang::Result<()> {
+async fn run() -> bang::Result<()> {
     // TODO: probably feature flag this
     fern::Dispatch::new()
         .format(|out, message, record| {
@@ -25,11 +25,12 @@ fn run() -> bang::Result<()> {
     let args = Cli::parse();
     let mut app = Application::new(args.config)?;
 
-    app.run(std::io::stdout())
+    app.run(std::io::stdout()).await
 }
 
-fn main() {
-    if let Err(e) = run() {
+#[tokio::main]
+async fn main() {
+    if let Err(e) = run().await {
         eprintln!("sad: {}", e);
     };
 }
