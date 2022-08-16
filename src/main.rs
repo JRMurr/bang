@@ -30,6 +30,7 @@ async fn run() -> bang::Result<()> {
 
 #[tokio::main]
 async fn main() {
+    console_subscriber::init();
     if let Err(e) = run().await {
         eprintln!("sad: {}", e);
     };

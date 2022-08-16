@@ -44,6 +44,8 @@
               extensions = [ "rust-src" "rust-analyzer" ];
             })
 
+            tokio-console
+
             cargo-expand
 
             # common

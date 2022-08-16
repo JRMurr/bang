@@ -220,6 +220,7 @@ impl CommandManager {
         Ok(())
     }
 
+    // TODO: can parallelize this
     pub fn poll_commands(&mut self) {
         self.commands
             .iter_mut()

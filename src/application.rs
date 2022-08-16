@@ -91,7 +91,7 @@ fn create_input_thread(sender: Sender<KeyEvent>) {
             // && let Ok(Event::Key(key)) = event::read() &&
             // sender.send(key).is_err() {     break;
             // }
-            let mut delay = Delay::new(Duration::from_millis(10)).fuse();
+            let mut delay = Delay::new(Duration::from_millis(32)).fuse();
             let mut event = reader.next().fuse();
 
             select! {
