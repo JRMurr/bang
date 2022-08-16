@@ -10,6 +10,7 @@ use tokio::{
     io::{AsyncBufReadExt, AsyncRead, BufReader},
     process::{Child, Command as CommandRunner},
 };
+use tracing::instrument;
 use tui::widgets::{ListItem, ListState};
 
 use crate::actions::ScrollDirection;
@@ -220,7 +221,7 @@ impl CommandManager {
         Ok(())
     }
 
-    // TODO: can parallelize this
+    #[instrument]
     pub fn poll_commands(&mut self) {
         self.commands
             .iter_mut()

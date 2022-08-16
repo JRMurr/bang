@@ -126,6 +126,7 @@ dependencies = [
  "time",
  "tokio",
  "toml",
+ "tracing",
  "tui",
 ]
 

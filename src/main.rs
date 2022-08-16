@@ -1,6 +1,8 @@
 use bang::{application::Application, cli::Cli};
 use clap::Parser;
+use tracing::instrument;
 
+#[instrument]
 async fn run() -> bang::Result<()> {
     // TODO: probably feature flag this
     fern::Dispatch::new()

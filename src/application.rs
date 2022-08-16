@@ -8,7 +8,8 @@ use crossbeam::channel::Sender;
 use crossterm::event::{Event, EventStream, KeyCode, KeyEvent};
 use futures::{future::FutureExt, select, StreamExt};
 use futures_timer::Delay;
-
+use tokio::time;
+use tracing::instrument;
 /// The main app
 #[derive(Debug)]
 pub struct Application {
@@ -30,7 +31,9 @@ impl Application {
     }
 
     /// Run the application
-    pub async fn run(&mut self, out: impl std::io::Write) -> crate::Result<()> {
+    #[instrument]
+    pub async fn run(&mut self, out: std::io::Stdout) -> crate::Result<()> {
+        let mut interval = time::interval(time::Duration::from_millis(32));
         let mut commands = CommandManager::default();
 
         let config_dir = &self.config.directory;
@@ -46,6 +49,10 @@ impl Application {
         renderer.render(&mut commands, false)?;
         let (sender, receiver) = crossbeam::channel::bounded(10);
         create_input_thread(sender);
+        // TODO: look into https://github.com/tokio-rs/console/blob/3bf60bce7b478c189a3145311e06f14cb2fc1e11/tokio-console/src/main.rs#L73
+        // seems to not re-draw the frame all the time which will help cpu usage
+        // currently cheating by using interval to have a min time each frame
+        // will take
         loop {
             if let Ok(key) = receiver.try_recv() {
                 if !self.in_help && let Ok(action) = key.try_into() {
@@ -78,10 +85,12 @@ impl Application {
 
             commands.poll_commands();
             renderer.render(&mut commands, self.in_help)?;
+            interval.tick().await;
         }
     }
 }
 
+#[instrument]
 fn create_input_thread(sender: Sender<KeyEvent>) {
     tokio::spawn(async move {
         let mut reader = EventStream::new();
@@ -91,7 +100,7 @@ fn create_input_thread(sender: Sender<KeyEvent>) {
             // && let Ok(Event::Key(key)) = event::read() &&
             // sender.send(key).is_err() {     break;
             // }
-            let mut delay = Delay::new(Duration::from_millis(32)).fuse();
+            let mut delay = Delay::new(Duration::from_millis(16)).fuse();
             let mut event = reader.next().fuse();
 
             select! {

@@ -20,6 +20,7 @@ serde = { version = "1.0.140", features = ["derive"] }
 shell-words = "1.1.0"
 thiserror = "1.0.31"
 time = { version = "0.3.13", features = ["formatting", "macros"] }
-tokio = { version = "1.20.1", features = ["rt", "process", "macros", "io-util", "rt-multi-thread", "tracing"] }
+tokio = { version = "1.20.1", features = ["rt", "process", "macros", "io-util", "rt-multi-thread", "tracing", "time"] }
 toml = "0.5.9"
+tracing = "0.1.36"
 tui = "0.18"
