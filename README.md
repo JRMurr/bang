@@ -31,6 +31,7 @@ Then run `bang`. Type `?` to see help.
 
 
 ## resources
+- https://github.com/DevHyperCoder/rbmenu-tui
 - https://github.com/tokio-rs/console/tree/main/tokio-console 
 - https://www.nikbrendler.com/rust-process-communication/
 - https://github.com/DevinR528/rumatui/blob/main/src/main.rs

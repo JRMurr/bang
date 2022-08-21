@@ -12,10 +12,6 @@ pub mod cli;
 mod command;
 /// config options/parsing
 mod config;
-/// setups up the [tui-rs] render
-mod renderer;
-/// ui setup
-mod ui;
 
 // TODO: make legit error type
 /// The main error type for the app

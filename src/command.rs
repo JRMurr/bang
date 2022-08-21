@@ -11,9 +11,6 @@ use tokio::{
     process::{Child, Command as CommandRunner},
 };
 use tracing::instrument;
-use tui::widgets::{ListItem, ListState};
-
-use crate::actions::ScrollDirection;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CommandBuilder {
@@ -120,7 +117,7 @@ pub struct Command {
     pub name: String,
     receiver: Receiver<String>,
     lines: Vec<String>,
-    pub state: ListState,
+    // pub state: ListState,
     child: Child,
 
     builder: CommandBuilder,
@@ -139,10 +136,11 @@ impl Command {
             child,
             builder,
             lines: Vec::with_capacity(100),
-            state: ListState::default(),
+            // state: ListState::default(),
         }
     }
 
+    #[allow(dead_code)]
     pub fn restart(&mut self, config_dir: &PathBuf) -> crate::Result<()> {
         let new = self.builder.run(config_dir)?;
         let old = std::mem::replace(self, new);
@@ -153,43 +151,44 @@ impl Command {
 
     pub fn populate_lines(&mut self) {
         let mut new_lines: Vec<String> = self.receiver.try_iter().collect();
-        let cursor_auto_scroll = self
-            .state
-            .selected()
-            .map_or(true, |curr| curr >= self.lines.len() - 1);
+        // let cursor_auto_scroll = self
+        //     .state
+        //     .selected()
+        //     .map_or(true, |curr| curr >= self.lines.len() - 1);
         if !new_lines.is_empty() {
             self.lines.append(&mut new_lines);
-            if cursor_auto_scroll {
-                self.state.select(Some(self.lines.len() - 1));
-            }
+            // if cursor_auto_scroll {
+            //     self.state.select(Some(self.lines.len() - 1));
+            // }
         }
     }
 
-    pub fn scroll(&mut self, dir: ScrollDirection, amount: usize) {
-        if let Some(curr) = self.state.selected() {
-            let new_pos = match dir {
-                ScrollDirection::Up => curr.saturating_sub(amount),
-                ScrollDirection::Down => {
-                    std::cmp::min(curr + amount, self.lines.len())
-                }
-            };
-            // TODO: this only selects the previous line so they need to go
-            // all the way to the top for the screen to scroll
-            // might need to fork the list wigit to update the logic
-            self.state.select(Some(new_pos));
-        }
-    }
+    // pub fn scroll(&mut self, dir: ScrollDirection, amount: usize) {
+    //     if let Some(curr) = self.state.selected() {
+    //         let new_pos = match dir {
+    //             ScrollDirection::Up => curr.saturating_sub(amount),
+    //             ScrollDirection::Down => {
+    //                 std::cmp::min(curr + amount, self.lines.len())
+    //             }
+    //         };
+    //         // TODO: this only selects the previous line so they need to go
+    //         // all the way to the top for the screen to scroll
+    //         // might need to fork the list wigit to update the logic
+    //         self.state.select(Some(new_pos));
+    //     }
+    // }
 
-    pub fn draw_info(&mut self) -> (&mut ListState, Vec<ListItem>) {
-        let lines = self
-            .lines
-            .iter()
-            .map(|line| ListItem::new(line.clone()))
-            .collect();
+    // pub fn draw_info(&mut self) -> (&mut ListState, Vec<ListItem>) {
+    //     let lines = self
+    //         .lines
+    //         .iter()
+    //         .map(|line| ListItem::new(line.clone()))
+    //         .collect();
 
-        (&mut self.state, lines)
-    }
+    //     (&mut self.state, lines)
+    // }
 
+    #[allow(dead_code)]
     pub async fn kill(&mut self) -> crate::Result<()> {
         if let Err(e) = self.child.kill().await {
             // InvalidInput when child already killed
@@ -211,7 +210,7 @@ impl Command {
 #[derive(Debug, Default)]
 pub struct CommandManager {
     commands: Vec<Command>,
-    state: ListState,
+    // state: ListState,
 }
 
 impl CommandManager {
@@ -228,55 +227,56 @@ impl CommandManager {
             .for_each(|command| command.populate_lines());
     }
 
+    #[allow(dead_code)]
     pub fn iter(&self) -> Iter<Command> {
         self.commands.iter()
     }
 
-    pub fn select(&mut self, idx: usize) {
-        self.state.select(Some(idx));
-    }
+    // pub fn select(&mut self, idx: usize) {
+    //     self.state.select(Some(idx));
+    // }
 
-    pub fn state(&mut self) -> &mut ListState {
-        &mut self.state
-    }
+    // pub fn state(&mut self) -> &mut ListState {
+    //     &mut self.state
+    // }
 
-    pub fn get_selected(&mut self) -> &mut Command {
-        // TODO: throw errors here
-        let selected = self
-            .state
-            .selected()
-            .expect("a command must be selected at all times");
+    // pub fn get_selected(&mut self) -> &mut Command {
+    //     // TODO: throw errors here
+    //     let selected = self
+    //         .state
+    //         .selected()
+    //         .expect("a command must be selected at all times");
 
-        self.commands
-            .get_mut(selected)
-            .expect("selected command must be in list")
-    }
+    //     self.commands
+    //         .get_mut(selected)
+    //         .expect("selected command must be in list")
+    // }
 
-    pub fn next(&mut self) {
-        let i = match self.state.selected() {
-            Some(i) => {
-                if i >= self.commands.len() - 1 {
-                    0
-                } else {
-                    i + 1
-                }
-            }
-            None => 0,
-        };
-        self.state.select(Some(i));
-    }
+    // pub fn next(&mut self) {
+    //     let i = match self.state.selected() {
+    //         Some(i) => {
+    //             if i >= self.commands.len() - 1 {
+    //                 0
+    //             } else {
+    //                 i + 1
+    //             }
+    //         }
+    //         None => 0,
+    //     };
+    //     self.state.select(Some(i));
+    // }
 
-    pub fn previous(&mut self) {
-        let i = match self.state.selected() {
-            Some(i) => {
-                if i == 0 {
-                    self.commands.len() - 1
-                } else {
-                    i - 1
-                }
-            }
-            None => 0,
-        };
-        self.state.select(Some(i));
-    }
+    // pub fn previous(&mut self) {
+    //     let i = match self.state.selected() {
+    //         Some(i) => {
+    //             if i == 0 {
+    //                 self.commands.len() - 1
+    //             } else {
+    //                 i - 1
+    //             }
+    //         }
+    //         None => 0,
+    //     };
+    //     self.state.select(Some(i));
+    // }
 }
