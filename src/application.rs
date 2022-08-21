@@ -42,10 +42,19 @@ impl Application {
 
         for command in commands.iter() {
             let name = command.name.to_string();
-            let text = TextView::new(command.text());
+            let content = command.content.clone();
+            let text = TextView::new_with_content(content);
 
             tabs.add_tab(ScrollView::new(text).with_name(name))
         }
+        // tokio::spawn(async move {
+        //     use tokio::time;
+        //     let mut interval =
+        // time::interval(time::Duration::from_millis(32));     loop {
+        //         commands.poll_commands();
+        //         interval.tick().await;
+        //     }
+        // });
 
         let mut siv = crossterm();
 

@@ -1,4 +1,6 @@
 use crossbeam::channel::{bounded, Receiver, Sender};
+use cursive::views::TextContent;
+use derivative::Derivative;
 use log::trace;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -111,12 +113,14 @@ impl CommandBuilder {
         Ok(Command::new(name.clone(), receiver, child, self.to_owned()))
     }
 }
-
-#[derive(Debug)]
+#[derive(Derivative)]
+#[derivative(Debug)]
 pub struct Command {
     pub name: String,
     receiver: Receiver<String>,
-    lines: Vec<String>,
+    // lines: Vec<String>,
+    #[derivative(Debug = "ignore")]
+    pub content: TextContent,
     // pub state: ListState,
     child: Child,
 
@@ -135,8 +139,8 @@ impl Command {
             receiver,
             child,
             builder,
-            lines: Vec::with_capacity(100),
-            // state: ListState::default(),
+            // TODO: cursive-tabs sad with just empty/whitepsace
+            content: TextContent::new("\nstart\n"),
         }
     }
 
@@ -150,16 +154,12 @@ impl Command {
     }
 
     pub fn populate_lines(&mut self) {
-        let mut new_lines: Vec<String> = self.receiver.try_iter().collect();
-        // let cursor_auto_scroll = self
-        //     .state
-        //     .selected()
-        //     .map_or(true, |curr| curr >= self.lines.len() - 1);
+        let new_lines: Vec<String> = self.receiver.try_iter().collect();
         if !new_lines.is_empty() {
-            self.lines.append(&mut new_lines);
-            // if cursor_auto_scroll {
-            //     self.state.select(Some(self.lines.len() - 1));
-            // }
+            // TODO: probably need a leading new line
+            let new_lines_str = new_lines.join("\n");
+
+            self.content.append(new_lines_str);
         }
     }
 
@@ -187,16 +187,6 @@ impl Command {
 
     //     (&mut self.state, lines)
     // }
-
-    pub fn text(&self) -> String {
-        // TODO: better
-        if self.lines.is_empty() {
-            // TODO: cursive_tab errors if returning empty output/just
-            // whitespace
-            return "<No output>".to_string();
-        }
-        self.lines.join("\n")
-    }
 
     #[allow(dead_code)]
     pub async fn kill(&mut self) -> crate::Result<()> {
