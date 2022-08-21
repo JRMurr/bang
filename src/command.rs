@@ -1,4 +1,3 @@
-use crossbeam::channel::{bounded, Receiver, Sender};
 use cursive::views::TextContent;
 use derivative::Derivative;
 use log::trace;
@@ -44,29 +43,26 @@ fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Option<PathBuf> {
 impl CommandBuilder {
     async fn read_io<R: AsyncRead + std::marker::Unpin>(
         reader: R,
-        sender: Sender<String>,
+        content: TextContent,
     ) {
         let mut f = BufReader::new(reader);
         loop {
             let mut buf = String::new();
             match f.read_line(&mut buf).await {
                 Ok(data_read) => {
-                    if let Err(_e) = sender.send(buf) {
-                        // disconnected. Right now only happens on exit so
-                        // probably fine to ignore
-                        // dbg!(e);
-                        break;
-                    }
                     if data_read == 0 {
                         // hit eof
                         break;
                     }
+
+                    content.append(buf);
                 }
                 Err(e) => trace!("an error!: {:?}", e),
             }
         }
     }
 
+    #[instrument]
     pub fn run(&self, config_dir: &PathBuf) -> crate::Result<Command> {
         let command = shell_words::split(&self.command)?;
 
@@ -85,6 +81,8 @@ impl CommandBuilder {
             None => Path::new(config_dir).to_path_buf(),
         };
 
+        // TODO: cursive-tabs sad with just empty/whitepsace
+        let content = TextContent::new("\nstart\n");
         let mut binding = CommandRunner::new(program);
         let mut child = binding
             .args(args)
@@ -97,31 +95,28 @@ impl CommandBuilder {
 
         let name = self.name.as_ref().unwrap_or(&self.command);
 
-        let (sender, receiver) = bounded::<String>(100);
         let stdout = child.stdout.take().unwrap();
         let stderr = child.stderr.take().unwrap();
 
-        let err_sender = sender.clone();
+        let stdout_content = content.clone();
+        let err_content = content.clone();
         // TODO: might be good to switch to tokio async tasks
         tokio::spawn(async move {
-            Self::read_io(stdout, sender).await;
+            Self::read_io(stdout, stdout_content).await;
         });
         tokio::spawn(async move {
-            Self::read_io(stderr, err_sender).await;
+            Self::read_io(stderr, err_content).await;
         });
 
-        Ok(Command::new(name.clone(), receiver, child, self.to_owned()))
+        Ok(Command::new(name.clone(), content, child, self.to_owned()))
     }
 }
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct Command {
     pub name: String,
-    receiver: Receiver<String>,
-    // lines: Vec<String>,
     #[derivative(Debug = "ignore")]
     pub content: TextContent,
-    // pub state: ListState,
     child: Child,
 
     builder: CommandBuilder,
@@ -130,17 +125,15 @@ pub struct Command {
 impl Command {
     pub fn new(
         name: String,
-        receiver: Receiver<String>,
+        content: TextContent,
         child: Child,
         builder: CommandBuilder,
     ) -> Self {
         Self {
             name,
-            receiver,
             child,
             builder,
-            // TODO: cursive-tabs sad with just empty/whitepsace
-            content: TextContent::new("\nstart\n"),
+            content,
         }
     }
 
@@ -153,15 +146,15 @@ impl Command {
         Ok(())
     }
 
-    pub fn populate_lines(&mut self) {
-        let new_lines: Vec<String> = self.receiver.try_iter().collect();
-        if !new_lines.is_empty() {
-            // TODO: probably need a leading new line
-            let new_lines_str = new_lines.join("\n");
+    // pub fn populate_lines(&mut self) {
+    //     let new_lines: Vec<String> = self.receiver.try_iter().collect();
+    //     if !new_lines.is_empty() {
+    //         // TODO: probably need a leading new line
+    //         let new_lines_str = new_lines.join("\n");
 
-            self.content.append(new_lines_str);
-        }
-    }
+    //         self.content.append(new_lines_str);
+    //     }
+    // }
 
     // pub fn scroll(&mut self, dir: ScrollDirection, amount: usize) {
     //     if let Some(curr) = self.state.selected() {
@@ -220,12 +213,12 @@ impl CommandManager {
         Ok(())
     }
 
-    #[instrument]
-    pub fn poll_commands(&mut self) {
-        self.commands
-            .iter_mut()
-            .for_each(|command| command.populate_lines());
-    }
+    // #[instrument]
+    // pub fn poll_commands(&mut self) {
+    //     self.commands
+    //         .iter_mut()
+    //         .for_each(|command| command.populate_lines());
+    // }
 
     #[allow(dead_code)]
     pub fn iter(&self) -> Iter<Command> {

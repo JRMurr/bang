@@ -33,8 +33,6 @@ impl Application {
             let command = command.run(config_dir)?;
             commands.add_command(command)?;
         }
-        // commands.select(0);
-        commands.poll_commands();
 
         let mut tabs = TabPanel::new()
             .with_bar_alignment(Align::Center)
@@ -47,14 +45,6 @@ impl Application {
 
             tabs.add_tab(ScrollView::new(text).with_name(name))
         }
-        // tokio::spawn(async move {
-        //     use tokio::time;
-        //     let mut interval =
-        // time::interval(time::Duration::from_millis(32));     loop {
-        //         commands.poll_commands();
-        //         interval.tick().await;
-        //     }
-        // });
 
         let mut siv = crossterm();
 
@@ -63,6 +53,8 @@ impl Application {
         siv.add_layer(tabs);
 
         siv.add_global_callback('q', |s| s.quit());
+
+        siv.set_autorefresh(true);
 
         siv.run();
 
