@@ -1,6 +1,7 @@
 use cursive::{
     view::{ScrollStrategy, SizeConstraint},
-    views::{ResizedView, ScrollView, TextView},
+    views::{Dialog, ResizedView, ScrollView, TextView},
+    Cursive,
 };
 
 use crate::command::Command;
@@ -15,6 +16,14 @@ pub fn get_command_view(command: &Command) -> CommandView {
         ScrollView::new(text).scroll_strategy(ScrollStrategy::StickToBottom);
 
     ResizedView::new(SizeConstraint::Full, SizeConstraint::Full, scroll_view)
+}
+
+pub fn set_help_menu(s: &mut Cursive) {
+    let dialog =
+        Dialog::around(TextView::new("Hello!")).button("Exit help", |s| {
+            s.pop_layer();
+        });
+    s.add_layer(dialog);
 }
 
 // pub struct Test {

@@ -36,17 +36,27 @@ impl Application {
         for command in &self.config.config.commands {
             let command = command.run(config_dir)?;
             let name = command.name.clone();
-            tabs.add_tab(NamedView::new(name, get_command_view(&command)));
+            let view = NamedView::new(name, get_command_view(&command));
+
+            tabs.add_tab(view);
             commands.push(command);
         }
+
+        // TODO: this shows the output of the first command but the last one
+        // looks selected?
+        tabs.set_active_tab(
+            tabs.tab_order().first().expect("need at least one command"),
+        )?;
 
         let mut siv = crossterm();
 
         siv.load_toml(include_str!("../theme.toml")).unwrap();
 
-        siv.add_layer(tabs);
+        siv.add_fullscreen_layer(tabs);
 
         siv.add_global_callback('q', |s| s.quit());
+
+        siv.add_global_callback('?', crate::views::set_help_menu);
 
         siv.set_autorefresh(true);
         siv.run();

@@ -80,8 +80,7 @@ impl CommandBuilder {
             None => Path::new(config_dir).to_path_buf(),
         };
 
-        // TODO: cursive-tabs sad with just empty/whitepsace
-        let content = TextContent::new("\nstart\n");
+        let content = TextContent::new("");
         let mut binding = CommandRunner::new(program);
         let mut child = binding
             .args(args)
