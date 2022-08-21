@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 use std::{
     path::{Path, PathBuf},
     process::Stdio,
-    slice::Iter,
 };
 use tokio::{
     io::{AsyncBufReadExt, AsyncRead, BufReader},
@@ -199,77 +198,3 @@ impl Command {
 //         let _ = self.kill();
 //     }
 // }
-
-#[derive(Debug, Default)]
-pub struct CommandManager {
-    commands: Vec<Command>,
-    // state: ListState,
-}
-
-impl CommandManager {
-    pub fn add_command(&mut self, command: Command) -> crate::Result<()> {
-        self.commands.push(command);
-
-        Ok(())
-    }
-
-    // #[instrument]
-    // pub fn poll_commands(&mut self) {
-    //     self.commands
-    //         .iter_mut()
-    //         .for_each(|command| command.populate_lines());
-    // }
-
-    #[allow(dead_code)]
-    pub fn iter(&self) -> Iter<Command> {
-        self.commands.iter()
-    }
-
-    // pub fn select(&mut self, idx: usize) {
-    //     self.state.select(Some(idx));
-    // }
-
-    // pub fn state(&mut self) -> &mut ListState {
-    //     &mut self.state
-    // }
-
-    // pub fn get_selected(&mut self) -> &mut Command {
-    //     // TODO: throw errors here
-    //     let selected = self
-    //         .state
-    //         .selected()
-    //         .expect("a command must be selected at all times");
-
-    //     self.commands
-    //         .get_mut(selected)
-    //         .expect("selected command must be in list")
-    // }
-
-    // pub fn next(&mut self) {
-    //     let i = match self.state.selected() {
-    //         Some(i) => {
-    //             if i >= self.commands.len() - 1 {
-    //                 0
-    //             } else {
-    //                 i + 1
-    //             }
-    //         }
-    //         None => 0,
-    //     };
-    //     self.state.select(Some(i));
-    // }
-
-    // pub fn previous(&mut self) {
-    //     let i = match self.state.selected() {
-    //         Some(i) => {
-    //             if i == 0 {
-    //                 self.commands.len() - 1
-    //             } else {
-    //                 i - 1
-    //             }
-    //         }
-    //         None => 0,
-    //     };
-    //     self.state.select(Some(i));
-    // }
-}

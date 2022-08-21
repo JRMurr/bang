@@ -12,6 +12,8 @@ pub mod cli;
 mod command;
 /// config options/parsing
 mod config;
+/// Implement views for commands
+mod views;
 
 // TODO: make legit error type
 /// The main error type for the app

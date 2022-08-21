@@ -1,9 +1,5 @@
-use crate::{command::CommandManager, config::Config};
-use cursive::{
-    crossterm,
-    view::{Nameable, ScrollStrategy},
-    views::{ScrollView, TextView},
-};
+use crate::{config::Config, views::get_command_view};
+use cursive::{crossterm, views::NamedView};
 use cursive_tabs::{Align, TabPanel};
 use std::path::PathBuf;
 use tracing::instrument;
@@ -25,29 +21,23 @@ impl Application {
     /// Run the application
     #[instrument]
     pub async fn run(&mut self, out: std::io::Stdout) -> crate::Result<()> {
-        let mut commands = CommandManager::default();
-
         let config_dir = &self.config.directory;
-
-        for command in &self.config.config.commands {
-            let command = command.run(config_dir)?;
-            commands.add_command(command)?;
-        }
 
         let mut tabs = TabPanel::new()
             .with_bar_alignment(Align::Center)
             .with_bar_placement(cursive_tabs::Placement::VerticalLeft);
 
-        for command in commands.iter() {
-            let name = command.name.to_string();
-            let content = command.content.clone();
-            let text = TextView::new_with_content(content);
+        // TODO: need commands to not be dropped until the end of run
+        // if i wrap command and try to make it a view no output is shown so
+        // this hack is the workaround for now
+        let mut commands =
+            Vec::with_capacity(self.config.config.commands.len());
 
-            let scroll_view = ScrollView::new(text)
-                .scroll_strategy(ScrollStrategy::StickToBottom)
-                .with_name(name);
-
-            tabs.add_tab(scroll_view)
+        for command in &self.config.config.commands {
+            let command = command.run(config_dir)?;
+            let name = command.name.clone();
+            tabs.add_tab(NamedView::new(name, get_command_view(&command)));
+            commands.push(command);
         }
 
         let mut siv = crossterm();
@@ -59,7 +49,6 @@ impl Application {
         siv.add_global_callback('q', |s| s.quit());
 
         siv.set_autorefresh(true);
-
         siv.run();
 
         Ok(())
