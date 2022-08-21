@@ -21,6 +21,7 @@ Then run `bang`. Type `?` to see help.
 ## TODO
 
 - re-work actions
+- look into making my own TabBar to make formatting nicer and to handle actions easier
 - Handle errors properly (maybe just use color_erye)
 - Log scrolling
   - On scroll it stops following the output

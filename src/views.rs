@@ -19,31 +19,10 @@ pub fn get_command_view(command: &Command) -> CommandView {
 }
 
 pub fn set_help_menu(s: &mut Cursive) {
-    let dialog =
-        Dialog::around(TextView::new("Hello!")).button("Exit help", |s| {
+    let dialog = Dialog::around(TextView::new("Some\tHelp"))
+        .button("Exit help", |s| {
             s.pop_layer();
-        });
+        })
+        .title("Help");
     s.add_layer(dialog);
 }
-
-// pub struct Test {
-//     command: Command,
-//     view: CommandView,
-// }
-
-// impl Test {
-//     pub fn new(command: Command) -> Self {
-//         let view = get_command_view(&command);
-//         Self { command, view }
-//     }
-
-//     pub fn name(&self) -> String {
-//         self.command.name.clone()
-//     }
-// }
-
-// impl View for Test {
-//     fn draw(&self, printer: &cursive::Printer) {
-//         self.view.draw(printer);
-//     }
-// }
