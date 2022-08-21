@@ -1,9 +1,12 @@
-use cursive::{crossterm, view::Nameable, views::TextView};
+use crate::{command::CommandManager, config::Config};
+use cursive::{
+    crossterm,
+    view::Nameable,
+    views::{ScrollView, TextView},
+};
 use cursive_tabs::{Align, TabPanel};
 use std::path::PathBuf;
 use tracing::instrument;
-
-use crate::{command::CommandManager, config::Config};
 
 /// The main app
 #[derive(Debug)]
@@ -33,11 +36,17 @@ impl Application {
         // commands.select(0);
         commands.poll_commands();
 
-        let tabs = TabPanel::new()
-            .with_tab(TextView::new("First").with_name("First"))
-            .with_tab(TextView::new("Second").with_name("Second"))
+        let mut tabs = TabPanel::new()
             .with_bar_alignment(Align::Center)
             .with_bar_placement(cursive_tabs::Placement::VerticalLeft);
+
+        for command in commands.iter() {
+            let name = command.name.to_string();
+            let text = TextView::new(command.text());
+
+            tabs.add_tab(ScrollView::new(text).with_name(name))
+        }
+
         let mut siv = crossterm();
 
         siv.load_toml(include_str!("../theme.toml")).unwrap();

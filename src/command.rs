@@ -188,6 +188,16 @@ impl Command {
     //     (&mut self.state, lines)
     // }
 
+    pub fn text(&self) -> String {
+        // TODO: better
+        if self.lines.is_empty() {
+            // TODO: cursive_tab errors if returning empty output/just
+            // whitespace
+            return "<No output>".to_string();
+        }
+        self.lines.join("\n")
+    }
+
     #[allow(dead_code)]
     pub async fn kill(&mut self) -> crate::Result<()> {
         if let Err(e) = self.child.kill().await {
