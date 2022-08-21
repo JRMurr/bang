@@ -1,7 +1,7 @@
 use crate::{command::CommandManager, config::Config};
 use cursive::{
     crossterm,
-    view::Nameable,
+    view::{Nameable, ScrollStrategy},
     views::{ScrollView, TextView},
 };
 use cursive_tabs::{Align, TabPanel};
@@ -43,7 +43,11 @@ impl Application {
             let content = command.content.clone();
             let text = TextView::new_with_content(content);
 
-            tabs.add_tab(ScrollView::new(text).with_name(name))
+            let scroll_view = ScrollView::new(text)
+                .scroll_strategy(ScrollStrategy::StickToBottom)
+                .with_name(name);
+
+            tabs.add_tab(scroll_view)
         }
 
         let mut siv = crossterm();
